@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext, useCallback } from 'react';
-import { useSpeechRecognition } from 'react-speech-recognition';
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { predictionService } from '../services/api';
 
 interface VoiceContextProps {
@@ -51,20 +51,18 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const startListening = useCallback(() => {
     if (browserSupportsSpeechRecognition && isMicrophoneAvailable) {
       resetTranscript();
-      // @ts-ignore - Type issue with SpeechRecognition
-      window.SpeechRecognition.startListening({ continuous: true });
+      SpeechRecognition.startListening({ continuous: true });
     } else {
       alert('Your browser does not support speech recognition or microphone access is denied.');
     }
   }, [browserSupportsSpeechRecognition, isMicrophoneAvailable, resetTranscript]);
 
   const stopListening = useCallback(() => {
-    // @ts-ignore - Type issue with SpeechRecognition
-    window.SpeechRecognition.stopListening();
+    SpeechRecognition.stopListening();
     if (transcript) {
       processQuery(transcript);
     }
-  }, [transcript]);
+  }, [transcript, processQuery]);
 
   return (
     <VoiceContext.Provider

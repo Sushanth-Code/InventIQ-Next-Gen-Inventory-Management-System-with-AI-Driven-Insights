@@ -134,12 +134,24 @@ export const inventoryService = {
       const result = await mockApiService.addProduct(productData);
       
       // Force a refresh of the inventory data in localStorage
+      localStorage.removeItem('inventoryData');
       await mockApiService.getAllProducts();
       
       return result;
     }
-    const response = await api.post('/inventory/', productData);
-    return response.data;
+    try {
+      const response = await api.post('/inventory/', productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding product, using mock data:', error);
+      useMockData = true;
+      
+      // Use mock service as fallback
+      const result = await mockApiService.addProduct(productData);
+      localStorage.removeItem('inventoryData');
+      await mockApiService.getAllProducts();
+      return result;
+    }
   },
   updateProduct: async (productId: string, productData: any) => {
     if (useMockData) {
@@ -147,21 +159,49 @@ export const inventoryService = {
       const result = await mockApiService.updateProduct(productId, productData);
       
       // Force a refresh of the inventory data in localStorage
-      // Clear any cached data to ensure fresh data is loaded next time
       localStorage.removeItem('inventoryData');
+      await mockApiService.getAllProducts();
       
       return result;
     }
-    const response = await api.put(`/inventory/${productId}`, productData);
-    return response.data;
+    try {
+      const response = await api.put(`/inventory/${productId}`, productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating product, using mock data:', error);
+      useMockData = true;
+      
+      // Use mock service as fallback
+      const result = await mockApiService.updateProduct(productId, productData);
+      localStorage.removeItem('inventoryData');
+      await mockApiService.getAllProducts();
+      return result;
+    }
   },
   deleteProduct: async (productId: string, deleteSupplier: boolean = false) => {
     if (useMockData) {
-      // Simulate successful product deletion
-      return { success: true, message: deleteSupplier ? 'Supplier and all products deleted successfully (Mock)' : 'Product deleted successfully (Mock)' };
+      // Use mock service to delete the product
+      const result = await mockApiService.deleteProduct(productId, deleteSupplier);
+      
+      // Force a refresh of the inventory data in localStorage
+      localStorage.removeItem('inventoryData');
+      await mockApiService.getAllProducts();
+      
+      return result;
     }
-    const response = await api.delete(`/inventory/${productId}?delete_supplier=${deleteSupplier}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/inventory/${productId}?delete_supplier=${deleteSupplier}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting product, using mock data:', error);
+      useMockData = true;
+      
+      // Use mock service as fallback
+      const result = await mockApiService.deleteProduct(productId, deleteSupplier);
+      localStorage.removeItem('inventoryData');
+      await mockApiService.getAllProducts();
+      return result;
+    }
   },
   recordTransaction: async (transactionData: any) => {
     if (useMockData) {

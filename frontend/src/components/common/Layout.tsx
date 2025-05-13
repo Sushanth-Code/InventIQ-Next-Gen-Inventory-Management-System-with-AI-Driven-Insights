@@ -35,12 +35,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
   }, []);
   
-  // Format current time for display in Indian format
+  // Format current date and time for display in Indian format
   const formattedCurrentTime = currentTime.toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true
+  });
+  
+  const formattedCurrentDate = currentTime.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   });
   
   useEffect(() => {
@@ -98,9 +104,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className={`bg-dark text-white ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex flex-col shadow-lg`}>
-        <div className="p-4 flex items-center justify-between border-b border-gray-700">
-          <h1 className={`font-bold text-xl ${isSidebarOpen ? 'block' : 'hidden'}`}>InventiQ</h1>
+      <div className={`bg-[#4169e1] text-white ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex flex-col shadow-lg`}>
+        <div className="p-4 flex items-center justify-between border-b border-blue-700">
+          <h1 className={`font-bold text-xl ${isSidebarOpen ? 'block' : 'hidden'}`}>Smart Inventory System</h1>
           <button onClick={toggleSidebar} className="text-white focus:outline-none">
             <span className="material-icons">{isSidebarOpen ? 'menu_open' : 'menu'}</span>
           </button>
@@ -223,30 +229,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6">
-          <div className="flex items-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+        <header className="bg-[#4169e1] text-white shadow-sm p-4 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-semibold text-white">
               {location.pathname.includes('/dashboard') && 'Dashboard'}
               {location.pathname.includes('/inventory') && !location.pathname.includes('/add') && !location.pathname.includes('/edit') && 'Inventory'}
               {location.pathname.includes('/inventory/add') && 'Add New Product'}
               {location.pathname.includes('/inventory/edit') && 'Edit Product'}
               {location.pathname.includes('/calculator') && 'Inventory Calculator'}
               {location.pathname.includes('/trends') && 'Trend Analysis'}
+              {location.pathname.includes('/smart-analysis') && 'Smart Analysis'}
             </h2>
           </div>
           
           <div className="flex items-center space-x-4">
-            <Tooltip title="Last login: ${formattedLoginTime}">
-              <div className="text-sm text-gray-500 cursor-pointer">
-                <span className="hidden md:inline">Logged in: </span>
-                {formattedLoginTime.split(',')[0]}
-                <span className="ml-2 font-medium text-primary">{formattedCurrentTime}</span>
+            <Tooltip title={`Last login: ${formattedLoginTime}`}>
+              <div className="text-sm text-white cursor-pointer">
+                <span className="hidden md:inline">Current Date: </span>
+                <span className="font-medium text-white">{formattedCurrentDate}</span>
+                <span className="ml-2 font-medium text-white">{formattedCurrentTime}</span>
               </div>
             </Tooltip>
             
             <Tooltip title="Notifications">
               <Badge badgeContent={unreadCount} color="primary" className="cursor-pointer" onClick={handleNotificationOpen}>
-                <Notifications className="text-gray-500" />
+                <Notifications className="text-white" />
               </Badge>
             </Tooltip>
             

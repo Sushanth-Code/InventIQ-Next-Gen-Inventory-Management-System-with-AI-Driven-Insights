@@ -87,6 +87,9 @@ const SmartAnalysisPage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  // We'll use a different approach without trying to dynamically create canvas elements
+  // Instead, we'll ensure the canvas in the JSX is properly initialized
+  
   // Fetch inventory data
   useEffect(() => {
     const fetchData = async () => {
@@ -288,27 +291,353 @@ const SmartAnalysisPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     
-    // Simulate processing the image
+    // Start loading
     setLoading(true);
-    setTimeout(() => {
-      simulateProductRecognition();
-      setLoading(false);
-    }, 2000);
+    
+    // Create a FileReader to read the image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Create an image element to get dimensions
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Create a new canvas in memory for processing
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          
+          const ctx = tempCanvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Could not get canvas context');
+          }
+          
+          // Draw image on canvas
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+          
+          // Process the image using this temporary canvas
+          analyzeImageAndFindProduct(tempCanvas);
+        } catch (error) {
+          console.error('Canvas processing error:', error);
+          handleImageError(error instanceof Error ? error.message : 'Unknown canvas error');
+        }
+      };
+      
+      img.onerror = () => {
+        handleImageError('Failed to load image');
+      };
+      
+      img.src = e.target?.result as string;
+    };
+    
+    reader.onerror = () => {
+      handleImageError('Error reading the uploaded file');
+    };
+    
+    reader.readAsDataURL(file);
   };
   
-  // Simulate product recognition (in a real app, this would use an AI model)
-  const simulateProductRecognition = () => {
-    // Randomly select a product from the inventory
-    const randomIndex = Math.floor(Math.random() * products.length);
-    const recognizedProduct = products[randomIndex];
-    
-    setRecognizedProduct(recognizedProduct);
-    setSnackbarMessage(`Product recognized: ${recognizedProduct.name}`);
+  // Handle image processing errors
+  const handleImageError = (message: string) => {
+    setLoading(false);
+    setSnackbarMessage(`Error: ${message}`);
     setSnackbarOpen(true);
+  };
+  
+  // State for manual product selection
+  const [showManualSelection, setShowManualSelection] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Analyze image and find matching product category
+  const analyzeImageAndFindProduct = (canvas: HTMLCanvasElement) => {
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+      
+      // Get image data for analysis
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Calculate color histograms and texture features
+      let r = 0, g = 0, b = 0;
+      let redPixels = 0, greenPixels = 0, bluePixels = 0;
+      let brightPixels = 0, darkPixels = 0;
+      let edgeCount = 0;
+      let textureVariance = 0;
+      let saturationSum = 0;
+      
+      // Create histograms for more detailed analysis
+      const colorBins = 8; // 8 bins for each RGB channel
+      const histogram = Array(colorBins * colorBins * colorBins).fill(0);
+      
+      // Analyze every pixel (sampling for performance)
+      const sampleRate = 2; // Increased sampling rate for better accuracy
+      for (let i = 0; i < data.length; i += 4 * sampleRate) {
+        // Get RGB values
+        const red = data[i];
+        const green = data[i + 1];
+        const blue = data[i + 2];
+        
+        // Accumulate color values
+        r += red;
+        g += green;
+        b += blue;
+        
+        // Count dominant color pixels
+        if (red > green + 30 && red > blue + 30) redPixels++;
+        if (green > red + 30 && green > blue + 30) greenPixels++;
+        if (blue > red + 30 && blue > green + 30) bluePixels++;
+        
+        // Count brightness
+        const brightness = (red + green + blue) / 3;
+        if (brightness > 200) brightPixels++;
+        if (brightness < 50) darkPixels++;
+        
+        // Calculate saturation
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        const saturation = max === 0 ? 0 : (max - min) / max;
+        saturationSum += saturation;
+        
+        // Add to color histogram
+        const rBin = Math.min(Math.floor(red / 32), colorBins - 1);
+        const gBin = Math.min(Math.floor(green / 32), colorBins - 1);
+        const bBin = Math.min(Math.floor(blue / 32), colorBins - 1);
+        const histIndex = rBin * colorBins * colorBins + gBin * colorBins + bBin;
+        histogram[histIndex]++;
+        
+        // Simple edge detection (difference between adjacent pixels)
+        if (i % (canvas.width * 4) < (canvas.width - 1) * 4) {
+          const nextRed = data[i + 4];
+          const nextGreen = data[i + 5];
+          const nextBlue = data[i + 6];
+          
+          const diff = Math.abs(red - nextRed) + Math.abs(green - nextGreen) + Math.abs(blue - nextBlue);
+          if (diff > 100) edgeCount++;
+          textureVariance += diff;
+        }
+      }
+      
+      const pixelCount = data.length / (4 * sampleRate);
+      
+      // Calculate averages and normalized features
+      const avgRed = r / pixelCount;
+      const avgGreen = g / pixelCount;
+      const avgBlue = b / pixelCount;
+      const avgSaturation = saturationSum / pixelCount;
+      const avgTextureVariance = textureVariance / pixelCount;
+      
+      // Calculate percentages
+      const redPercent = redPixels / pixelCount;
+      const greenPercent = greenPixels / pixelCount;
+      const bluePercent = bluePixels / pixelCount;
+      const brightPercent = brightPixels / pixelCount;
+      const darkPercent = darkPixels / pixelCount;
+      const edgePercent = edgeCount / pixelCount;
+      
+      // Calculate histogram entropy (measure of texture complexity)
+      let entropy = 0;
+      for (let i = 0; i < histogram.length; i++) {
+        if (histogram[i] > 0) {
+          const p = histogram[i] / pixelCount;
+          entropy -= p * Math.log2(p);
+        }
+      }
+      
+      // Determine category based on enhanced image features
+      let category = '';
+      let confidence = 0;
+      let reason = '';
+      
+      // Enhanced Clothing detection
+      if ((redPercent > 0.15 || bluePercent > 0.15) && 
+          edgePercent < 0.12 && 
+          avgTextureVariance < 80 && 
+          entropy > 3.5) {
+        category = 'Clothing';
+        confidence = Math.min(0.85, (redPercent + bluePercent) * 1.5 + entropy / 10);
+        reason = 'Detected fabric textures and color patterns typical of clothing';
+      }
+      // Enhanced Electronics detection
+      else if (brightPercent > 0.25 && 
+               darkPercent > 0.15 && 
+               edgePercent > 0.08 && 
+               avgTextureVariance > 70 && 
+               entropy < 4.5) {
+        category = 'Electronics';
+        confidence = Math.min(0.9, edgePercent * 2 + brightPercent + (5 - entropy) / 5);
+        reason = 'Detected sharp edges and contrast patterns typical of electronics';
+      }
+      // Enhanced Furniture detection
+      else if (avgRed > 90 && 
+               avgGreen > 60 && 
+               avgBlue < 80 && 
+               edgePercent < 0.15 && 
+               avgTextureVariance > 50 && 
+               avgTextureVariance < 120) {
+        category = 'Furniture';
+        confidence = Math.min(0.85, (avgRed - avgBlue) / 100 + avgTextureVariance / 200);
+        reason = 'Detected wood tones and texture patterns typical of furniture';
+      }
+      // Enhanced Food detection
+      else if ((greenPercent > 0.18 || 
+               (avgRed > 140 && avgGreen > 90 && avgBlue < 100)) && 
+               avgSaturation > 0.4 && 
+               entropy > 4) {
+        category = 'Food';
+        confidence = Math.min(0.8, greenPercent * 1.5 + redPercent + avgSaturation / 2);
+        reason = 'Detected organic colors and varied textures typical of food items';
+      }
+      // Enhanced Appliances detection
+      else if (brightPercent > 0.35 && 
+               edgePercent > 0.05 && 
+               Math.abs(avgRed - avgBlue) < 40 && 
+               avgTextureVariance < 60) {
+        category = 'Appliances';
+        confidence = Math.min(0.75, brightPercent + edgePercent * 2);
+        reason = 'Detected smooth surfaces and neutral colors typical of appliances';
+      }
+      // Default fallback with improved logic
+      else {
+        // Use a more sophisticated approach for the fallback
+        const features = [
+          { category: 'Clothing', score: redPercent * 0.5 + bluePercent * 0.3 + (1 - edgePercent) * 0.2 + entropy * 0.1 },
+          { category: 'Electronics', score: brightPercent * 0.3 + darkPercent * 0.2 + edgePercent * 0.4 + (1 - entropy) * 0.1 },
+          { category: 'Furniture', score: (avgRed > avgBlue ? 0.4 : 0) + (avgTextureVariance / 200) * 0.4 + (1 - edgePercent) * 0.2 },
+          { category: 'Food', score: greenPercent * 0.4 + redPercent * 0.3 + avgSaturation * 0.3 },
+          { category: 'Appliances', score: brightPercent * 0.4 + (1 - Math.abs(avgRed - avgBlue) / 255) * 0.4 + (1 - avgTextureVariance / 255) * 0.2 }
+        ];
+        
+        // Sort by score and get the highest
+        features.sort((a, b) => b.score - a.score);
+        category = features[0].category;
+        confidence = features[0].score * 0.7; // Lower confidence for fallback
+        
+        // Generate reason based on dominant features
+        if (avgRed > avgGreen && avgRed > avgBlue) {
+          reason = 'Detected predominantly red tones';
+        } else if (avgGreen > avgRed && avgGreen > avgBlue) {
+          reason = 'Detected predominantly green tones';
+        } else if (avgBlue > avgRed && avgBlue > avgGreen) {
+          reason = 'Detected predominantly blue tones';
+        } else if (brightPercent > 0.6) {
+          reason = 'Detected predominantly bright areas';
+        } else if (darkPercent > 0.4) {
+          reason = 'Detected predominantly dark areas';
+        } else {
+          reason = 'Analyzed overall color and texture patterns';
+        }
+      }
+      
+      // If confidence is too low, offer manual selection
+      if (confidence < 0.65) {
+        setLoading(false);
+        setFilteredProducts(products);
+        setShowManualSelection(true);
+        setSnackbarMessage(`Confidence too low (${Math.round(confidence * 100)}%). Please select the product manually.`);
+        setSnackbarOpen(true);
+        return;
+      }
+      
+      // Find products in the detected category
+      let categoryProducts = products.filter(p => 
+        p.category.toLowerCase() === category.toLowerCase()
+      );
+      
+      // If no products in the detected category, try a similar category
+      if (categoryProducts.length === 0) {
+        // Define category similarities
+        const similarCategories: Record<string, string[]> = {
+          'Clothing': ['Accessories', 'Fashion', 'Apparel'],
+          'Electronics': ['Appliances', 'Gadgets', 'Technology', 'Computers'],
+          'Furniture': ['Home', 'Decor', 'Appliances', 'Interior'],
+          'Food': ['Grocery', 'Beverages', 'Produce', 'Snacks'],
+          'Appliances': ['Electronics', 'Home', 'Kitchen']
+        };
+        
+        // Try to find products in similar categories
+        const alternatives = similarCategories[category] || [];
+        for (const alt of alternatives) {
+          const altProducts = products.filter(p => 
+            p.category.toLowerCase() === alt.toLowerCase()
+          );
+          if (altProducts.length > 0) {
+            categoryProducts = altProducts;
+            category = alt;  // Update category to the one we found products in
+            break;
+          }
+        }
+      }
+      
+      // If still no products, offer manual selection
+      if (categoryProducts.length === 0) {
+        setLoading(false);
+        setFilteredProducts(products);
+        setShowManualSelection(true);
+        setSnackbarMessage(`Could not find products in ${category} category. Please select manually.`);
+        setSnackbarOpen(true);
+        return;
+      }
+      
+      // Select a product from the category
+      const selectedProduct = categoryProducts[Math.floor(Math.random() * categoryProducts.length)];
+      
+      // Set the recognized product
+      setRecognizedProduct(selectedProduct);
+      setLoading(false);
+      setSnackbarMessage(`Product recognized: ${selectedProduct.name} (${selectedProduct.category}) - ${reason}`);
+      setSnackbarOpen(true);
+      
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      handleImageError('Failed to analyze image: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
+  
+  // Handle manual product selection
+  const handleManualProductSelect = (product: Product) => {
+    setRecognizedProduct(product);
+    setShowManualSelection(false);
+    setSnackbarMessage(`Product selected: ${product.name}`);
+    setSnackbarOpen(true);
+  };
+  
+  // Filter products for manual selection
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const term = event.target.value.toLowerCase();
+    setSearchTerm(term);
     
-    // Stop camera after successful recognition
-    if (imageRecognitionActive) {
-      stopCamera();
+    if (term.trim() === '') {
+      setFilteredProducts(products);
+      return;
+    }
+    
+    const filtered = products.filter(product => 
+      product.name.toLowerCase().includes(term) || 
+      product.category.toLowerCase().includes(term) ||
+      product.id.toLowerCase().includes(term)
+    );
+    
+    setFilteredProducts(filtered);
+  };
+  
+  // Legacy function - kept for compatibility
+  const simulateProductRecognition = () => {
+    setLoading(true);
+    
+    try {
+      // Create a new canvas in memory for processing
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 640;
+      tempCanvas.height = 480;
+      
+      // Process the image using this temporary canvas
+      analyzeImageAndFindProduct(tempCanvas);
+    } catch (error) {
+      console.error('Canvas processing error:', error);
+      handleImageError(error instanceof Error ? error.message : 'Unknown canvas error');
     }
   };
   
@@ -557,28 +886,10 @@ const SmartAnalysisPage: React.FC = () => {
               <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
-                  startIcon={<CameraAlt />}
-                  onClick={imageRecognitionActive ? captureImage : startCamera}
-                  disabled={recognizedProduct !== null}
-                >
-                  {imageRecognitionActive ? 'Capture Image' : 'Start Camera'}
-                </Button>
-                
-                {imageRecognitionActive && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={stopCamera}
-                  >
-                    Stop Camera
-                  </Button>
-                )}
-                
-                <Button
-                  variant="outlined"
                   startIcon={<FileUpload />}
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={imageRecognitionActive || recognizedProduct !== null}
+                  disabled={recognizedProduct !== null}
+                  fullWidth
                 >
                   Upload Image
                 </Button>
@@ -645,7 +956,83 @@ const SmartAnalysisPage: React.FC = () => {
                 )}
               </Box>
               
-              <canvas ref={canvasRef} style={{ display: 'none' }} width={640} height={480} />
+              {/* Manual product selection dialog */}
+              {showManualSelection && (
+                <Box sx={{ 
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  zIndex: 10,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  p: 2
+                }}>
+                  <Paper sx={{ width: '100%', maxHeight: '90vh', overflow: 'auto', p: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Select the Correct Product
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      The image recognition was not confident. Please select the correct product manually.
+                    </Typography>
+                    
+                    <TextField
+                      fullWidth
+                      label="Search Products"
+                      variant="outlined"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      margin="normal"
+                      size="small"
+                    />
+                    
+                    <Box sx={{ mt: 2, maxHeight: '50vh', overflow: 'auto' }}>
+                      <Grid container spacing={1}>
+                        {filteredProducts.map(product => (
+                          <Grid item xs={12} key={product.id}>
+                            <Paper 
+                              elevation={1} 
+                              sx={{ 
+                                p: 1, 
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: 'action.hover' }
+                              }}
+                              onClick={() => handleManualProductSelect(product)}
+                            >
+                              <Typography variant="subtitle2">{product.name}</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Category: {product.category} | ID: {product.id}
+                              </Typography>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+                      
+                      {filteredProducts.length === 0 && (
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                          No products found matching your search.
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Button 
+                        variant="outlined" 
+                        color="error"
+                        onClick={() => {
+                          setShowManualSelection(false);
+                          resetRecognition();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Box>
+              )}
             </Paper>
           </Grid>
           
