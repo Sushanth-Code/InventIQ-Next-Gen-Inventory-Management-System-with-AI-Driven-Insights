@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { inventoryService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from '@mui/material';
+import SaleDialog from '../components/inventory/SaleDialog';
 
 interface Product {
   id: string;
@@ -27,6 +28,8 @@ const InventoryPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteSupplierDialogOpen, setDeleteSupplierDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Function to fetch products that can be called multiple times
   const fetchProducts = async () => {
@@ -69,22 +72,34 @@ const InventoryPage: React.FC = () => {
   // Get unique categories for the filter
   const categories = Array.from(new Set(products.map(product => product.category)));
 
+  // Handle opening sale dialog
+  const handleSaleClick = (product: Product) => {
+    setSelectedProduct(product);
+    setSaleDialogOpen(true);
+  };
+
   // Handle sale transaction
-  const handleSale = async (productId: string) => {
+  const handleSaleConfirm = async (quantity: number) => {
+    if (!selectedProduct) return;
+    
     try {
       await inventoryService.recordTransaction({
-        product_id: productId,
+        product_id: selectedProduct.id,
         transaction_type: 'sale',
-        quantity: 1
+        quantity: quantity
       });
       
       // Update the product in state
       setProducts(prevProducts => prevProducts.map(product => {
-        if (product.id === productId) {
-          return { ...product, current_stock: product.current_stock - 1 };
+        if (product.id === selectedProduct.id) {
+          return { ...product, current_stock: product.current_stock - quantity };
         }
         return product;
       }));
+      
+      // Close the dialog
+      setSaleDialogOpen(false);
+      setSelectedProduct(null);
     } catch (err: any) {
       alert('Error recording sale: ' + (err.response?.data?.message || err.message));
     }
@@ -177,6 +192,18 @@ const InventoryPage: React.FC = () => {
           Add Product
         </Link>
       </div>
+      
+      {/* Sale Dialog */}
+      <SaleDialog
+        open={saleDialogOpen}
+        onClose={() => {
+          setSaleDialogOpen(false);
+          setSelectedProduct(null);
+        }}
+        onConfirm={handleSaleConfirm}
+        maxQuantity={selectedProduct?.current_stock || 0}
+        productName={selectedProduct?.name || ''}
+      />
       
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -282,7 +309,7 @@ const InventoryPage: React.FC = () => {
                   <td className="py-3 px-4">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleSale(product.id)}
+                        onClick={() => handleSaleClick(product)}
                         disabled={product.current_stock <= 0}
                         className={`px-2 py-1 text-xs rounded ${
                           product.current_stock <= 0

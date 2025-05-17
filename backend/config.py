@@ -6,7 +6,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'h7G@p$!wR*zK#uJyX^mN&sVbF+cEqA2d'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///inventiq.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql://root:Sql%402025@localhost/inventiq_next_gen'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # AI/LLM Configuration

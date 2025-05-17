@@ -305,11 +305,35 @@ const TrendsPage: React.FC = () => {
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
+                  <XAxis 
+                    dataKey="day"
+                    tickFormatter={(value) => {
+                      const date = new Date();
+                      date.setDate(parseInt(value.split('-')[1]));
+                      return date.toISOString().split('T')[0];
+                    }}
+                  />
+                  <YAxis 
+                    domain={[0, 'auto']}
+                    ticks={[0, 35, 70, 105, 140]}
+                    tickFormatter={(value) => value.toString()}
+                  />
+                  <Tooltip
+                    labelFormatter={(value) => {
+                      const date = new Date();
+                      date.setDate(parseInt(value.split('-')[1]));
+                      return date.toISOString().split('T')[0];
+                    }}
+                  />
                   <Legend />
-                  <Line type="monotone" dataKey="sales" stroke="#8884d8" activeDot={{ r: 8 }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="#8884d8" 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 8 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </Paper>
@@ -327,11 +351,12 @@ const TrendsPage: React.FC = () => {
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" />
+                  <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="trend" fill="#82ca9d" name="Growth %" />
+                  <Bar dataKey="avg_growth" fill="#82ca9d" name="Growth %" />
+                  <Bar dataKey="total_sales" fill="#8884d8" name="Total Sales" />
                 </RechartsBarChart>
               </ResponsiveContainer>
             </Paper>
@@ -453,12 +478,12 @@ const TrendsPage: React.FC = () => {
                     <Typography variant="h6">Best Category</Typography>
                     <Typography variant="h4">
                       {categoryTrends && categoryTrends.length > 0 ? 
-                        [...categoryTrends].sort((a, b) => b.trend - a.trend)[0].category : 'N/A'}
+                        [...categoryTrends].sort((a, b) => (b.avg_growth || 0) - (a.avg_growth || 0))[0].name : 'N/A'}
                     </Typography>
                     <Typography variant="body2">
                       {categoryTrends && categoryTrends.length > 0 ? 
-                        `${[...categoryTrends].sort((a, b) => b.trend - a.trend)[0].trend}% growth` : 
-                        '0% growth'}
+                        `${[...categoryTrends].sort((a, b) => (b.avg_growth || 0) - (a.avg_growth || 0))[0].avg_growth || 0}% growth` : 
+                        'No data yet'}
                     </Typography>
                   </CardContent>
                 </Card>

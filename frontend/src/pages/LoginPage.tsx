@@ -47,40 +47,23 @@ const LoginPage: React.FC = () => {
         throw new Error('Password is required');
       }
       
-      // For testing/demo purposes, use hardcoded credentials
-      // Remove this in production
-      if (userRole === 'admin' && username === 'admin' && password === 'admin123') {
-        // Simulate successful login for admin
-        const adminUser = {
-          id: 1,
-          username: 'admin',
-          email: 'admin@inventiq.com',
-          role: 'admin',
-          lastLogin: new Date().toISOString()
-        };
-        localStorage.setItem('user', JSON.stringify(adminUser));
-        localStorage.setItem('token', 'demo-admin-token');
+      // Attempt login through backend
+      const result = await login(username, password, userRole);
+      
+      // Store the token and user info
+      if (result && result.token) {
+        localStorage.setItem('token', `Bearer ${result.token}`);
+        localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('loginTime', new Date().toISOString());
-        window.location.href = '/dashboard';
-        return;
-      } else if (userRole === 'staff' && username === 'staff' && password === 'staff123') {
-        // Simulate successful login for staff
-        const staffUser = {
-          id: 2,
-          username: 'staff',
-          email: 'staff@inventiq.com',
-          role: 'staff',
-          lastLogin: new Date().toISOString()
-        };
-        localStorage.setItem('user', JSON.stringify(staffUser));
-        localStorage.setItem('token', 'demo-staff-token');
-        localStorage.setItem('loginTime', new Date().toISOString());
-        window.location.href = '/dashboard';
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
         return;
       }
       
-      // If not using hardcoded credentials, try the actual login
-      await login(username, password, userRole);
+      // Display the error message
+      setErrorMessage('Login failed. Please try again.');
       setOpenSnackbar(true);
       setTimeout(() => {
         navigate('/dashboard');

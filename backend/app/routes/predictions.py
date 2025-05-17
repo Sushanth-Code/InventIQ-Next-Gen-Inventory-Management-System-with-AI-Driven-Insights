@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
+import json
 from app.models.inventory import Product
 from app.routes.auth import token_required
-from app.services.ml_service import forecast_demand, recommend_restock
+from app.services.ml_service import forecast_demand, recommend_restock, get_trend_data
 from app.services.llm_service import get_llm_insights
 
 predictions_bp = Blueprint('predictions', __name__)
@@ -57,3 +58,13 @@ def get_insights(current_user):
         'query': query,
         'insights': insights
     }), 200
+
+@predictions_bp.route('/trends', methods=['GET'])
+@token_required
+def get_trends(current_user):
+    try:
+        trend_data = get_trend_data()
+        return jsonify(trend_data), 200
+    except Exception as e:
+        print(f'Error getting trend data: {str(e)}')
+        return jsonify({'message': f'Error getting trend data: {str(e)}'}), 500

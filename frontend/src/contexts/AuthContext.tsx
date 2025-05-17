@@ -1,19 +1,14 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { authService } from '../services/api';
+import { User, LoginResponse } from '../types/auth';
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  lastLogin?: string;
-}
+
 
 interface AuthContextProps {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string, role?: string) => Promise<void>;
+  login: (username: string, password: string, role?: string) => Promise<LoginResponse>;
   logout: () => void;
   isLoading: boolean;
   error: string | null;
@@ -68,20 +63,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return permissions.includes(permission);
   };
 
-  const login = async (username: string, password: string, role: string = 'staff') => {
+  const login = async (username: string, password: string, role: string = 'staff'): Promise<LoginResponse> => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await authService.login(username, password, role);
-      
-      // Verify if the returned user role matches the requested role
-      if (response.user.role !== role) {
-        throw new Error(`Access denied. You don't have ${role} privileges.`);
+      if (response && response.token) {
+        setUser(response.user);
+        setToken(`Bearer ${response.token}`);
+        localStorage.setItem('token', `Bearer ${response.token}`);
+        localStorage.setItem('user', JSON.stringify(response.user));
       }
-      
-      setToken(response.token);
-      
-      // Add last login time to user object
+      return response;
       const currentTime = new Date().toISOString();
       const userWithLoginTime = {
         ...response.user,
