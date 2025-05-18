@@ -4,7 +4,6 @@ from app.routes.auth import token_required
 from main import db
 import json
 from datetime import datetime
-from datetime import datetime
 
 inventory_bp = Blueprint('inventory', __name__)
 
@@ -134,28 +133,62 @@ def update_product(current_user, product_id):
 @inventory_bp.route('/<product_id>', methods=['DELETE'])
 @token_required
 def delete_product(current_user, product_id):
-    if current_user.role != 'admin':
-        return jsonify({'message': 'Permission denied!'}), 403
-    
-    # Check if we should delete all products from the supplier
-    delete_supplier = request.args.get('delete_supplier', 'false').lower() == 'true'
-    
-    product = Product.query.get_or_404(product_id)
-    supplier_name = product.supplier
-    
-    if delete_supplier:
-        # Delete all products from this supplier
-        products_to_delete = Product.query.filter_by(supplier=supplier_name).all()
-        for p in products_to_delete:
-            db.session.delete(p)
+    try:
+        # Check user role
+        if current_user.role != 'admin':
+            return jsonify({'message': 'Permission denied! Only admin can delete products.'}), 403
         
-        db.session.commit()
-        return jsonify({'message': f'Supplier {supplier_name} and all associated products deleted successfully!'}), 200
-    else:
-        # Delete just this product
-        db.session.delete(product)
-        db.session.commit()
-        return jsonify({'message': 'Product deleted successfully!'}), 200
+        # Check if product exists
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'message': f'Product with ID {product_id} not found'}), 404
+        
+        # Check if we should delete all products from the supplier
+        delete_supplier = request.args.get('delete_supplier', 'false').lower() == 'true'
+        supplier_name = product.supplier
+        
+        try:
+            if delete_supplier:
+                # Delete all products from this supplier
+                products_to_delete = Product.query.filter_by(supplier=supplier_name).all()
+                if not products_to_delete:
+                    return jsonify({'message': f'No products found for supplier {supplier_name}'}), 404
+                
+                # First delete all transactions for each product
+                for p in products_to_delete:
+                    # Delete related transactions
+                    Transaction.query.filter_by(product_id=p.id).delete()
+                
+                # Then delete the products
+                for p in products_to_delete:
+                    db.session.delete(p)
+                
+                db.session.commit()
+                return jsonify({
+                    'message': f'Supplier {supplier_name} and all associated products deleted successfully!',
+                    'deleted_count': len(products_to_delete)
+                }), 200
+            else:
+                # First delete all transactions for this product
+                Transaction.query.filter_by(product_id=product.id).delete()
+                
+                # Then delete the product
+                db.session.delete(product)
+                db.session.commit()
+                
+                return jsonify({
+                    'message': 'Product deleted successfully!',
+                    'deleted_product': product.to_dict()
+                }), 200
+                
+        except Exception as db_error:
+            db.session.rollback()
+            print(f'Database error during delete: {str(db_error)}')
+            return jsonify({'message': f'Database error occurred while deleting: {str(db_error)}'}), 500
+            
+    except Exception as e:
+        print(f'Error in delete_product: {str(e)}')
+        return jsonify({'message': f'Error occurred: {str(e)}'}), 500
 
 @inventory_bp.route('/transaction', methods=['POST'])
 @token_required

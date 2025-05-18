@@ -122,16 +122,22 @@ const InventoryPage: React.FC = () => {
     if (!productToDelete) return;
     
     try {
-      await inventoryService.deleteProduct(productToDelete.id, false);
+      const response = await inventoryService.deleteProduct(productToDelete.id, false);
       
-      // Remove the product from state
+      // Remove the product from state only if delete was successful
       setProducts(prevProducts => prevProducts.filter(product => product.id !== productToDelete.id));
       
       // Close the dialog
       setDeleteDialogOpen(false);
       setProductToDelete(null);
+      
+      // Show success message
+      alert(response.message || 'Product deleted successfully');
     } catch (err: any) {
-      alert('Error deleting product: ' + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete product';
+      alert('Error deleting product: ' + errorMessage);
+      // Refresh products list to ensure sync with backend
+      fetchProducts();
     }
   };
   
@@ -140,9 +146,9 @@ const InventoryPage: React.FC = () => {
     if (!productToDelete) return;
     
     try {
-      await inventoryService.deleteProduct(productToDelete.id, true);
+      const response = await inventoryService.deleteProduct(productToDelete.id, true);
       
-      // Remove all products from this supplier
+      // Remove all products from this supplier only if delete was successful
       const supplierName = productToDelete.supplier;
       setProducts(prevProducts => prevProducts.filter(product => product.supplier !== supplierName));
       
@@ -150,8 +156,14 @@ const InventoryPage: React.FC = () => {
       setDeleteSupplierDialogOpen(false);
       setDeleteDialogOpen(false);
       setProductToDelete(null);
+      
+      // Show success message
+      alert(response.message || 'Supplier and associated products deleted successfully');
     } catch (err: any) {
-      alert('Error deleting supplier: ' + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete supplier';
+      alert('Error deleting supplier: ' + errorMessage);
+      // Refresh products list to ensure sync with backend
+      fetchProducts();
     }
   };
   

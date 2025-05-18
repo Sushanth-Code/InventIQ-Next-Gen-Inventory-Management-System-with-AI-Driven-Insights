@@ -80,7 +80,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ anchorEl, o
     });
   };
   
-  const getIconForType = (type: string) => {
+  const getIconForType = (type: string, message: string) => {
+    // Check if it's an out-of-stock notification
+    if (message.toLowerCase().includes('out of stock')) {
+      return 'bg-orange-100 text-orange-800';
+    }
+
     switch (type) {
       case 'error':
         return 'bg-red-100 text-red-800';
@@ -187,9 +192,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ anchorEl, o
                     <React.Fragment>
                       <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
                         <Chip
-                          label={notification.type.toUpperCase()}
+                          label={notification.message.toLowerCase().includes('out of stock') ? 'WARNING' : notification.type.toUpperCase()}
                           size="small"
-                          className={getIconForType(notification.type)}
+                          className={getIconForType(notification.type, notification.message)}
                         />
                         <Typography
                           variant="caption"
