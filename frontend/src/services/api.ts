@@ -131,6 +131,20 @@ export const inventoryService = {
   },
 };
 
+// Assistant services
+export const assistantService = {
+  getInsights: async (query: string, productId?: string) => {
+    try {
+      const payload = productId ? { query, product_id: productId } : { query };
+      const response = await api.post('/assistant/insights', payload);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching assistant insights:', error);
+      throw new Error('Failed to fetch insights from assistant');
+    }
+  },
+};
+
 // Prediction services
 export const predictionService = {
   getDemandForecast: async (productId: string, days: number = 30) => {
@@ -139,7 +153,7 @@ export const predictionService = {
       return response.data;
     } catch (error: any) {
       console.error('Error fetching forecast:', error);
-      throw new Error('Failed to fetch demand forecast');
+      throw new Error('Failed to fetch forecast');
     }
   },
   

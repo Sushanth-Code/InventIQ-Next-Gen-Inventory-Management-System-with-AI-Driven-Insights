@@ -33,12 +33,14 @@ def create_app(config_class=Config):
     from app.routes.predictions import predictions_bp
     from app.routes.csv_handler import csv_handler
     from app.routes.assistant import assistant_bp
+    from app.routes.export import export_bp
     
     app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(predictions_bp, url_prefix='/api/predictions')
     app.register_blueprint(csv_handler, url_prefix='/api/csv')
     app.register_blueprint(assistant_bp)
+    app.register_blueprint(export_bp)
     
     # Create database tables
     with app.app_context():

@@ -24,12 +24,34 @@ class OllamaService:
             payload["system"] = system_prompt
             
         try:
-            response = requests.post(self.api_endpoint, json=payload)
+            # Try to connect to Ollama server first
+            health_check = requests.get(f"{self.base_url}/api/health", timeout=5)
+            if health_check.status_code != 200:
+                raise Exception("Ollama server is not running. Please start Ollama first.")
+                
+            # Check if model exists
+            models = requests.get(f"{self.base_url}/api/tags", timeout=5).json()
+            if not any(self.model in model.get('name', '') for model in models.get('models', [])):
+                raise Exception(f"Model {self.model} is not downloaded. Please run: ollama pull {self.model}")
+            
+            # Generate response with timeout
+            response = requests.post(self.api_endpoint, json=payload, timeout=30)
             response.raise_for_status()
             return response.json()["response"]
+            
+        except requests.exceptions.Timeout:
+            error_msg = "Request to Ollama timed out. Please check if the server is responding."
+            current_app.logger.error(error_msg)
+            raise Exception(error_msg)
+            
+        except requests.exceptions.ConnectionError:
+            error_msg = "Could not connect to Ollama. Please make sure Ollama is running."
+            current_app.logger.error(error_msg)
+            raise Exception(error_msg)
+            
         except Exception as e:
             current_app.logger.error(f"Error calling Ollama API: {str(e)}")
-            return f"Error generating insights: {str(e)}"
+            raise Exception(f"Error generating insights: {str(e)}")
 
 def prepare_inventory_summary():
     """Prepare a summary of inventory data for the LLM context."""

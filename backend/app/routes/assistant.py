@@ -16,8 +16,8 @@ def get_insights():
     
     try:
         # Get insights from LLM service
-        insight = get_llm_insights(query, product_id)
-        return jsonify({'insight': insight})
+        insights = get_llm_insights(query, product_id)
+        return jsonify({'insights': insights})
     except Exception as e:
         current_app.logger.error(f"Error generating insights: {str(e)}")
         return jsonify({'error': f'Failed to generate insights: {str(e)}'}), 500

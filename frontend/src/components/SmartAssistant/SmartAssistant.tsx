@@ -43,8 +43,7 @@ import {
 } from '@mui/icons-material';
 import { ListSubheader } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { inventoryService, predictionService } from '../../services/api';
-import enhancedOllamaService from '../../services/enhancedOllamaService';
+import { inventoryService, predictionService, assistantService } from '../../services/api';
 
 // Smart Inventory Assistant Component with enhanced features
 const SmartAssistant: React.FC = () => {
@@ -286,27 +285,24 @@ const SmartAssistant: React.FC = () => {
     setQuery('');
     
     try {
-      // Get inventory context
-      const inventoryContext = prepareInventoryContext();
-      
-      // Use the fallback response generator
-      const response = enhancedOllamaService.generateFallbackResponse(submittedQuery, inventoryContext);
-      
-      // Simulate a delay to make it feel like AI is thinking (more impressive)
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+      // Call our backend assistant API
+      console.log('Sending query to assistant API:', submittedQuery);
+      const result = await assistantService.getInsights(submittedQuery);
+      console.log('Received response from assistant API:', result);
       
       // Add AI message
       const aiMessage = {
-        text: response,
+        text: result.insights || 'Sorry, I could not generate insights at this time.',
         role: 'assistant' as const,
         timestamp: new Date()
       };
+      console.log('Created AI message:', aiMessage);
       
       setMessages(prev => [...prev, aiMessage]);
       
       // Speak the response if speech is enabled
       if (speechEnabled) {
-        speakText(response);
+        speakText(result.insights);
       }
     } catch (error) {
       console.error('Error generating response:', error);

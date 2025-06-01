@@ -15,10 +15,14 @@ def create_app(config_class=Config):
     from app.routes.auth import auth_bp
     from app.routes.inventory import inventory_bp
     from app.routes.predictions import predictions_bp
+    from app.routes.export import export_bp
+    from app.routes.assistant import assistant_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
     app.register_blueprint(predictions_bp, url_prefix='/api/predictions')
+    app.register_blueprint(export_bp, url_prefix='/api/export')
+    app.register_blueprint(assistant_bp)
     
     return app
 
