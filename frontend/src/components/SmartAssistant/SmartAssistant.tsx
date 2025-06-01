@@ -294,37 +294,9 @@ const parseInventoryCommand = (command: string): {
   
   if (!action) return { action: null, productIdentifier: null, identifierType: null, quantity: null };
   
-  // Extract quantity - make sure we don't confuse model numbers with quantities
-  // First check for explicit quantity patterns like "with 700 units" or "700 units"
-  let quantity = null;
-  const explicitQuantityMatch = commandLower.match(/(?:with|add|sell)\s+(\d+)\s*(?:units?|items?|pieces?|qty|quantity)\b/);
-  
-  if (explicitQuantityMatch) {
-    quantity = parseInt(explicitQuantityMatch[1]);
-    console.log(`Found explicit quantity: ${quantity}`);
-  } else {
-    // Look for standalone numbers that aren't part of product names
-    const standaloneQuantityMatch = commandLower.match(/\b(\d+)\s*(?:units?|items?|pieces?|qty|quantity)?\b/);
-    
-    // Check if this number is likely a quantity and not part of a product name like "iPhone 16"
-    if (standaloneQuantityMatch) {
-      // Only use the match if it's not part of a product model number
-      const matchPosition = standaloneQuantityMatch.index !== undefined ? standaloneQuantityMatch.index : 0;
-      const textBeforeMatch = commandLower.substring(0, matchPosition + 5);
-      
-      // Check if this number is part of a product name pattern like "iPhone 16"
-      const isPartOfProductName = /(iphone|macbook|galaxy|thinkpad|surface)\s+\d+/i.test(textBeforeMatch);
-      
-      if (!isPartOfProductName) {
-        quantity = parseInt(standaloneQuantityMatch[1]);
-        console.log(`Found standalone quantity: ${quantity}`);
-      } else {
-        console.log(`Number ${standaloneQuantityMatch[1]} appears to be part of a product name, not using as quantity`);
-        // For product model numbers, set a default quantity if none specified
-        if (quantity === null) quantity = 10; // Default quantity for product models
-      }
-    }
-  }
+  // Extract quantity
+  const quantityMatch = commandLower.match(/\b(\d+)\s*(units?|items?|pieces?|qty|quantity)?\b/);
+  const quantity = quantityMatch ? parseInt(quantityMatch[1]) : null;
   
   // Extract category if mentioned
   let category = null;
@@ -381,9 +353,8 @@ const parseInventoryCommand = (command: string): {
   
   // Check for just a number that might be a product ID (after checking for product X pattern)
   const justNumberMatch = commandLower.match(/\b(\d+)\b/);
-  // Make sure this isn't the same number we extracted as quantity
-  // We've replaced quantityMatch with our new quantity extraction logic
-  if (justNumberMatch && quantity !== parseInt(justNumberMatch[1])) {
+  if (justNumberMatch && justNumberMatch[1] !== (quantityMatch ? quantityMatch[1] : null)) {
+    // Make sure this isn't the same number we extracted as quantity
     return {
       action,
       productIdentifier: justNumberMatch[1].trim(),
@@ -425,14 +396,11 @@ const parseInventoryCommand = (command: string): {
   // Then check for direct product names after action verbs
   // This pattern looks for words after the action verb (restock/sell) and before with/by/for or quantity
   // Use the original command (not lowercase) for matching to preserve case in product names
-  // Improved pattern to better capture product names like "iPhone 16"
-  const directProductMatch = command.match(/\b(?:restock|sell|add|sold)\s+([\w\s\d\-&]+?)(?:\s+(?:by|with|for)\s+|\s+\d+\s+|$)/i);
-  
+  const directProductMatch = command.toLowerCase().match(/\b(?:restock|sell|add|sold)\s+([\w\s\d\-&]+?)(?:\s+(?:by|with|for|\d+)|$)/i);
   if (directProductMatch && directProductMatch[1]) {
     // Make sure we're not capturing the action verb itself
     const productName = directProductMatch[1].trim();
     if (productName && !/(restock|sell|add|sold)/i.test(productName.toLowerCase())) {
-      console.log(`Extracted product name: "${productName}"`);
       return {
         action,
         productIdentifier: productName,
@@ -446,50 +414,60 @@ const parseInventoryCommand = (command: string): {
   return { action, productIdentifier: null, identifierType: null, quantity: null, category };
 };
 
-  // Check if input is a greeting
-  const isGreeting = (text: string): boolean => {
-    const greetingPatterns = [
-      /^(hi|hello|hey|greetings|good morning|good afternoon|good evening|howdy|hi there|hello there)\b/i,
-      /^(how are you|how\'s it going|what\'s up|sup|yo)\b/i
-    ];
-    return greetingPatterns.some(pattern => pattern.test(text.trim()));
+  // Check if input is a greeting and determine the type of greeting
+  const isGreeting = (text: string): { isGreeting: boolean, isHowAreYou: boolean } => {
+    const simpleGreetingPattern = /^(hi|hello|hey|greetings|good morning|good afternoon|good evening|howdy|hi there|hello there)\b/i;
+    const howAreYouPattern = /^(how are you|how\'s it going|what\'s up|sup|yo)\b|\b(how are you|how\'s it going)\b/i;
+    
+    const isSimpleGreeting = simpleGreetingPattern.test(text.trim());
+    const isHowAreYou = howAreYouPattern.test(text.trim());
+    
+    return {
+      isGreeting: isSimpleGreeting || isHowAreYou,
+      isHowAreYou: isHowAreYou
+    };
   };
   
-  // Get appropriate greeting response based on time of day
-  const getGreetingResponse = (): string => {
+  // Get appropriate greeting response based on time of day and greeting type
+  const getGreetingResponse = (isHowAreYou: boolean = false): string => {
     const hour = new Date().getHours();
-    let greeting = '';
+    let timeGreeting = '';
     
     if (hour < 12) {
-      greeting = 'Good morning! ';
+      timeGreeting = 'Good morning! ';
     } else if (hour < 18) {
-      greeting = 'Good afternoon! ';
+      timeGreeting = 'Good afternoon! ';
     } else {
-      greeting = 'Good evening! ';
+      timeGreeting = 'Good evening! ';
     }
     
-    const responses = [
-      `${greeting}How can I help with your inventory today?`,
-      `${greeting}Welcome to InventIQ! How can I assist you?`,
-      `${greeting}I'm ready to help with your inventory management needs.`,
-      `${greeting}What inventory information would you like to know about today?`
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    if (isHowAreYou) {
+      const howAreYouResponses = [
+        `I'm doing great, thanks for asking! ${timeGreeting.trim()} How can I help with your inventory today?`,
+        `I'm fine, thank you! Ready to assist with your inventory management needs.`,
+        `I'm excellent! Always ready to help with your inventory questions.`,
+        `I'm doing well! ${timeGreeting.trim()} What inventory information would you like to know about?`
+      ];
+      return howAreYouResponses[Math.floor(Math.random() * howAreYouResponses.length)];
+    } else {
+      const standardResponses = [
+        `${timeGreeting}How can I help with your inventory today?`,
+        `${timeGreeting}Welcome to InventIQ! How can I assist you?`,
+        `${timeGreeting}I'm ready to help with your inventory management needs.`,
+        `${timeGreeting}What inventory information would you like to know about today?`
+      ];
+      return standardResponses[Math.floor(Math.random() * standardResponses.length)];
+    }
   };
 
   // Find product by identifier
   const findProduct = (identifier: string, type: 'id' | 'name' | 'category', products: any[], category?: string | null) => {
     // Log the search parameters for debugging
-    console.log(`Searching for product: "${identifier}", type: ${type}, category: ${category || 'none'}`);
+    console.log(`Searching for product: ${identifier}, type: ${type}, category: ${category || 'none'}`);
     console.log(`Available products: ${products.length}`);
     
     // Normalize the identifier
     const normalizedIdentifier = identifier.toLowerCase().trim();
-    
-    // Special case for product names with numbers (like iPhone 16)
-    // This helps distinguish between products like "iPhone 16" and "iPhone SE"
-    const hasModelNumber = /iphone\s+\d+|macbook\s+\d+|galaxy\s+\d+/i.test(normalizedIdentifier);
     
     // If we have both an ID and category, use both to narrow down the search
     if (type === 'id' && category) {
@@ -558,26 +536,6 @@ const parseInventoryCommand = (command: string): {
       
       return product || null;
     } else if (type === 'name') {
-      // Check if this is a product with a model number (like iPhone 16)
-      const modelMatch = normalizedIdentifier.match(/(iphone|macbook|galaxy|thinkpad|surface)\s+(\d+)/i);
-      
-      if (modelMatch) {
-        const [fullMatch, productLine, modelNumber] = modelMatch;
-        console.log(`Detected product with model number: ${productLine} ${modelNumber}`);
-        
-        // Look for exact model match first
-        let product = products.find(p => {
-          const nameLower = p.name.toLowerCase();
-          return nameLower.includes(productLine.toLowerCase()) && 
-                 nameLower.includes(modelNumber);
-        });
-        
-        if (product) {
-          console.log(`Found exact model match: ${product.name} (${product.id})`);
-          return product;
-        }
-      }
-      
       // First try exact match
       let product = products.find(p => p.name.toLowerCase() === normalizedIdentifier);
       
@@ -605,74 +563,15 @@ const parseInventoryCommand = (command: string): {
       }
       
       // If still no product found, try looking for a product with this name in any word
-      // But be more precise to avoid incorrect matches
       if (!product) {
-        // First try exact full name match with the entire identifier
-        product = products.find(p => {
-          const productNameLower = p.name.toLowerCase();
-          const exactMatch = productNameLower === normalizedIdentifier;
-          const containsAllWords = normalizedIdentifier.split(/\s+/).every(word => 
-            productNameLower.includes(word)
-          );
-          return exactMatch || containsAllWords;
-        });
-        
-        if (product) {
-          console.log(`Found product by full name match: ${product.name} (${product.id})`);
-        } else {
-          // Try to match product names that contain the full identifier as a substring
-          product = products.find(p => 
-            p.name.toLowerCase().includes(normalizedIdentifier)
-          );
+        const words = normalizedIdentifier.split(/\s+/);
+        for (const word of words) {
+          if (word.length < 3) continue; // Skip very short words
           
+          product = products.find(p => p.name.toLowerCase().includes(word));
           if (product) {
-            console.log(`Found product by substring match: ${product.name} (${product.id})`);
-          } else {
-            // As a last resort, try individual words but with stricter matching
-            const words = normalizedIdentifier.split(/\s+/).filter(w => w.length > 2);
-            
-            // Sort words by length (descending) to prioritize longer, more specific words
-            words.sort((a, b) => b.length - a.length);
-            
-            for (const word of words) {
-              // Only consider words that are likely product names (not common words)
-              if (word.length < 4) continue;
-              
-              // Look for products where this word is a significant part of the name
-              const potentialMatches = products.filter(p => {
-                const productNameLower = p.name.toLowerCase();
-                return productNameLower.includes(word);
-              });
-              
-              // If we have multiple matches, try to find the best one
-              if (potentialMatches.length > 0) {
-                // Sort by how closely the product name matches our search term
-                potentialMatches.sort((a, b) => {
-                  const aNameLower = a.name.toLowerCase();
-                  const bNameLower = b.name.toLowerCase();
-                  
-                  // Check if either name contains the full identifier
-                  const aContainsFull = aNameLower.includes(normalizedIdentifier);
-                  const bContainsFull = bNameLower.includes(normalizedIdentifier);
-                  
-                  if (aContainsFull && !bContainsFull) return -1;
-                  if (!aContainsFull && bContainsFull) return 1;
-                  
-                  // Count how many words from the search are in each product name
-                  const aWordCount = words.filter(w => aNameLower.includes(w)).length;
-                  const bWordCount = words.filter(w => bNameLower.includes(w)).length;
-                  
-                  if (aWordCount !== bWordCount) return bWordCount - aWordCount;
-                  
-                  // If still tied, prefer shorter names (more specific matches)
-                  return aNameLower.length - bNameLower.length;
-                });
-                
-                product = potentialMatches[0];
-                console.log(`Found best matching product: ${product.name} (${product.id})`);
-                break;
-              }
-            }
+            console.log(`Found product by word match '${word}': ${product.name} (${product.id})`);
+            break;
           }
         }
       }
@@ -711,44 +610,13 @@ const parseInventoryCommand = (command: string): {
     setLoading(true);
     setQuery(''); // Clear input field 
     try {
-      // Special case for iPhone models - direct handling
-      const iPhoneModelMatch = queryToSubmit.match(/restock\s+(iphone\s+\d+(?:\s+pro)?)/i);
-      if (iPhoneModelMatch) {
-        const iPhoneModel = iPhoneModelMatch[1];
-        const quantityMatch = queryToSubmit.match(/with\s+(\d+)\s+units/i);
-        const quantity = quantityMatch ? parseInt(quantityMatch[1]) : 10; // Default to 10 if no quantity specified
-        
-        console.log(`Special case: iPhone model detected: ${iPhoneModel}, quantity: ${quantity}`);
-        
-        // Create a direct response for iPhone models
-        const assistantMessage: {
-          role: 'assistant' | 'user',
-          text: string,
-          timestamp: Date
-        } = {
-          role: 'assistant',
-          text: `I understand you want to restock ${iPhoneModel} with ${quantity} units. However, this exact model isn't in our inventory system yet. Would you like to add it as a new product?`,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        if (speechEnabled) {
-          speakText(assistantMessage.text);
-        }
-        
-        setLoading(false);
-        return;
-      }
-      
-      // Check if input is a greeting
-      if (isGreeting(queryToSubmit)) {
-        const aiMessage: {
-          role: 'assistant' | 'user',
-          text: string,
-          timestamp: Date
-        } = {
-          role: 'assistant',
-          text: getGreetingResponse(),
+      // Check if this is a greeting
+      const greetingCheck = isGreeting(queryToSubmit || '');
+      if (greetingCheck.isGreeting) {
+        const greetingResponse = getGreetingResponse(greetingCheck.isHowAreYou);
+        const aiMessage = {
+          text: greetingResponse,
+          role: 'assistant' as const,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMessage]);
