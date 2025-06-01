@@ -1,0 +1,206 @@
+id,name,category,supplier,current_stock,reorder_level,purchase_price,selling_price,stock_status
+P0001,Product 1,Toys,Supplier A,0,22,178.75,256.88,OUT_OF_STOCK
+P0002,Product 2,Toys,Supplier C,20,58,174.02,219.46,LOW_STOCK
+P0003,Product 3,Home & Kitchen,Supplier A,29003,90,155.84,220.6,IN_STOCK
+P0004,Product 4,Clothing,Supplier B,0,69,152.4,168.42,OUT_OF_STOCK
+P0005,Product 5,Books,Supplier A,693,31,400.81,510.68,IN_STOCK
+P0006,Product 6,Groceries,Supplier C,3700,28,441.48,558.28,IN_STOCK
+P0007,Product 7,Clothing,Supplier D,809,83,326.79,373.67,IN_STOCK
+P0008,Product 8,Clothing,Supplier A,6800,98,444.09,660.94,IN_STOCK
+P0009,Product 9,Home & Kitchen,Supplier C,1027,66,355.46,452.65,IN_STOCK
+P0010,Product 10,Home & Kitchen,Supplier C,355,22,420.98,552.07,IN_STOCK
+P0011,Product 11,Books,Supplier D,334,56,486.77,724.52,IN_STOCK
+P0012,Product 12,Home & Kitchen,Supplier A,181,12,443.53,498.69,IN_STOCK
+P0013,Product 13,Electronics,Supplier A,480,73,364.31,520.15,IN_STOCK
+P0014,Product 14,Groceries,Supplier A,229,61,204.8,282.71,IN_STOCK
+P0015,Product 15,Clothing,Supplier A,0,74,376.84,542.52,OUT_OF_STOCK
+P0016,Product 16,Clothing,Supplier D,0,45,10.88,11.99,OUT_OF_STOCK
+P0017,Product 17,Groceries,Supplier C,0,49,149.35,223.85,OUT_OF_STOCK
+P0018,Product 18,Toys,Supplier C,0,37,75.44,91.09,OUT_OF_STOCK
+P0019,Product 19,Clothing,Supplier C,316,12,232.9,290.6,IN_STOCK
+P0020,Product 20,Books,Supplier A,72,67,23.5,30.92,IN_STOCK
+P0021,Product 21,Clothing,Supplier D,262,62,416.47,568.9,IN_STOCK
+P0022,Product 22,Books,Supplier B,354,23,236.66,346.68,IN_STOCK
+P0023,Product 23,Electronics,Supplier C,192,100,132.74,172.73,IN_STOCK
+P0024,Product 24,Home & Kitchen,Supplier B,331,10,158.86,188.52,IN_STOCK
+P0025,Product 25,Toys,Supplier C,250,97,221.97,251.37,IN_STOCK
+P0026,Product 26,Electronics,Supplier A,141,10,387.81,472.04,IN_STOCK
+P0027,Product 27,Electronics,Supplier A,0,99,471.04,693.96,OUT_OF_STOCK
+P0028,Product 28,Home & Kitchen,Supplier A,0,11,469.51,697.19,OUT_OF_STOCK
+P0029,Product 29,Books,Supplier C,251,57,97.66,122.23,IN_STOCK
+P0030,Product 30,Clothing,Supplier C,492,100,262.99,312.69,IN_STOCK
+P0031,Product 31,Groceries,Supplier C,455,92,296.19,403.94,IN_STOCK
+P0032,Product 32,Toys,Supplier C,0,22,386.23,444.46,OUT_OF_STOCK
+P0033,Product 33,Books,Supplier A,58,46,48.52,66.75,IN_STOCK
+P0034,Product 34,Groceries,Supplier B,2999,78,459.01,681.28,IN_STOCK
+P0035,Product 35,Clothing,Supplier B,326,97,342.38,410.23,IN_STOCK
+P0036,Product 36,Clothing,Supplier D,173,92,452.55,629.6,IN_STOCK
+P0037,Product 37,Clothing,Supplier B,395,61,152.68,205.64,IN_STOCK
+P0038,Product 38,Toys,Supplier C,216,17,395.63,519.28,IN_STOCK
+P0039,Product 39,Books,Supplier C,365,22,425.37,497.99,IN_STOCK
+P0040,Product 40,Groceries,Supplier B,57,41,427.67,566.38,IN_STOCK
+P0041,Product 41,Clothing,Supplier C,167,13,268.51,329.75,IN_STOCK
+P0042,Product 42,Books,Supplier D,358,82,285.63,390.32,IN_STOCK
+P0043,Product 43,Books,Supplier A,340,17,18.42,24.68,IN_STOCK
+P0044,Product 44,Groceries,Supplier B,269,98,179.26,201.84,IN_STOCK
+P0045,Product 45,Books,Supplier A,361,95,334.85,491.6,IN_STOCK
+P0046,Product 46,Home & Kitchen,Supplier D,83,12,322.07,424.49,IN_STOCK
+P0047,Product 47,Electronics,Supplier D,449,18,183.3,218.46,IN_STOCK
+P0048,Product 48,Electronics,Supplier A,205,77,324.26,451.98,IN_STOCK
+P0049,Product 49,Toys,Supplier C,231,20,174.46,240.18,IN_STOCK
+P0050,Product 50,Groceries,Supplier B,59,58,71.57,94.33,IN_STOCK
+P0051,Product 51,Electronics,Supplier C,185,79,95.59,134.43,IN_STOCK
+P0052,Product 52,Toys,Supplier D,425,91,485.89,550.1,IN_STOCK
+P0053,Product 53,Home & Kitchen,Supplier A,428,35,90.54,110.52,IN_STOCK
+P0054,Product 54,Groceries,Supplier D,213,58,41.97,52.64,IN_STOCK
+P0055,Product 55,Home & Kitchen,Supplier B,95,83,35.56,46.46,IN_STOCK
+P0056,Product 56,Books,Supplier D,306,17,194.91,254.55,IN_STOCK
+P0057,Product 57,Clothing,Supplier C,403,86,141.61,176.38,IN_STOCK
+P0058,Product 58,Clothing,Supplier A,486,61,193.02,245.59,IN_STOCK
+P0059,Product 59,Books,Supplier C,303,70,457.81,568.66,IN_STOCK
+P0060,Product 60,Electronics,Supplier B,135,66,390.47,539.02,IN_STOCK
+P0061,Product 61,Clothing,Supplier B,449,27,450.74,629.55,IN_STOCK
+P0062,Product 62,Clothing,Supplier C,162,10,347.13,427.8,IN_STOCK
+P0063,Product 63,Toys,Supplier C,134,26,270.57,328.94,IN_STOCK
+P0064,Product 64,Home & Kitchen,Supplier D,129,81,368.25,505.66,IN_STOCK
+P0065,Product 65,Clothing,Supplier A,356,65,179.1,221.76,IN_STOCK
+P0066,Product 66,Electronics,Supplier C,92,40,477.93,581.13,IN_STOCK
+P0067,Product 67,Clothing,Supplier A,83,64,321.73,358.12,IN_STOCK
+P0068,Product 68,Home & Kitchen,Supplier B,361,54,263.44,344.54,IN_STOCK
+P0069,Product 69,Groceries,Supplier C,259,41,452.5,601.89,IN_STOCK
+P0070,Product 70,Groceries,Supplier A,214,29,303.02,369.42,IN_STOCK
+P0071,Product 71,Home & Kitchen,Supplier B,324,63,378.18,485.52,IN_STOCK
+P0072,Product 72,Electronics,Supplier D,498,60,263.88,309.14,IN_STOCK
+P0073,Product 73,Groceries,Supplier B,137,93,325.64,479.55,IN_STOCK
+P0074,Product 74,Books,Supplier A,351,31,220.3,317.56,IN_STOCK
+P0075,Product 75,Electronics,Supplier B,84,80,322.72,433.92,IN_STOCK
+P0076,Product 76,Toys,Supplier B,310,79,492.21,599.39,IN_STOCK
+P0077,Product 77,Groceries,Supplier A,317,100,335.88,464.12,IN_STOCK
+P0078,Product 78,Toys,Supplier D,363,70,229.87,337.43,IN_STOCK
+P0079,Product 79,Clothing,Supplier D,470,19,178.31,264.14,IN_STOCK
+P0080,Product 80,Electronics,Supplier C,67,23,343.36,460.35,IN_STOCK
+P0081,Product 81,Toys,Supplier C,68,43,343.25,380.77,IN_STOCK
+P0082,Product 82,Books,Supplier B,293,71,49.64,62.18,IN_STOCK
+P0083,Product 83,Groceries,Supplier C,277,31,39.18,49.21,IN_STOCK
+P0084,Product 84,Home & Kitchen,Supplier A,89,78,199.59,239.87,IN_STOCK
+P0085,Product 85,Toys,Supplier D,112,90,393.01,494.79,IN_STOCK
+P0086,Product 86,Clothing,Supplier A,87,82,317.84,365.97,IN_STOCK
+P0087,Product 87,Groceries,Supplier B,125,93,42.85,57.31,IN_STOCK
+P0088,Product 88,Books,Supplier B,94,86,377.72,494.08,IN_STOCK
+P0089,Product 89,Groceries,Supplier C,57,55,405.2,559.71,IN_STOCK
+P0090,Product 90,Toys,Supplier D,71,56,299.69,434.51,IN_STOCK
+P0091,Product 91,Groceries,Supplier B,127,79,233.8,311.89,IN_STOCK
+P0092,Product 92,Books,Supplier B,317,63,347.65,480.34,IN_STOCK
+P0093,Product 93,Electronics,Supplier A,207,79,378.67,521.85,IN_STOCK
+P0094,Product 94,Electronics,Supplier B,270,30,239.91,276.58,IN_STOCK
+P0095,Product 95,Clothing,Supplier A,164,22,177.44,249.15,IN_STOCK
+P0096,Product 96,Toys,Supplier D,62,48,432.81,537.5,IN_STOCK
+P0097,Product 97,Home & Kitchen,Supplier A,47,26,374.85,430.43,IN_STOCK
+P0098,Product 98,Groceries,Supplier A,368,42,5.66,7.77,IN_STOCK
+P0099,Product 99,Groceries,Supplier B,244,13,14.87,19.44,IN_STOCK
+P0100,Product 100,Electronics,Supplier C,318,44,212.65,246.41,IN_STOCK
+P0101,Product 101,Toys,Supplier C,108,36,399.6,540.56,IN_STOCK
+P0102,Product 102,Home & Kitchen,Supplier B,271,77,233.98,290.67,IN_STOCK
+P0103,Product 103,Books,Supplier A,300,61,349.98,433.73,IN_STOCK
+P0104,Product 104,Groceries,Supplier A,117,53,155.57,200.61,IN_STOCK
+P0105,Product 105,Electronics,Supplier C,173,11,202.5,287.47,IN_STOCK
+P0106,Product 106,Groceries,Supplier D,360,29,472.81,661.76,IN_STOCK
+P0107,Product 107,Groceries,Supplier B,148,49,73.46,102.8,IN_STOCK
+P0108,Product 108,Books,Supplier C,413,41,430.76,575.74,IN_STOCK
+P0109,Product 109,Clothing,Supplier A,493,29,6.22,8.17,IN_STOCK
+P0110,Product 110,Groceries,Supplier C,135,26,395.15,437.01,IN_STOCK
+P0111,Product 111,Clothing,Supplier B,38,21,229.52,313.25,IN_STOCK
+P0112,Product 112,Toys,Supplier B,241,31,214.72,264.1,IN_STOCK
+P0113,Product 113,Groceries,Supplier A,100,80,364.73,543.68,IN_STOCK
+P0114,Product 114,Electronics,Supplier B,252,20,266.31,345.39,IN_STOCK
+P0115,Product 115,Toys,Supplier D,210,11,201.64,223.04,IN_STOCK
+P0116,Product 116,Books,Supplier C,77,61,107.33,127.99,IN_STOCK
+P0117,Product 117,Electronics,Supplier B,80,40,306.85,342.74,IN_STOCK
+P0118,Product 118,Books,Supplier B,59,48,492.57,732.85,IN_STOCK
+P0119,Product 119,Electronics,Supplier C,68,67,316.62,369.25,IN_STOCK
+P0120,Product 120,Toys,Supplier A,380,55,339.46,432.13,IN_STOCK
+P0121,Product 121,Electronics,Supplier A,272,84,255.76,318.27,IN_STOCK
+P0122,Product 122,Electronics,Supplier D,209,91,246.82,307.73,IN_STOCK
+P0123,Product 123,Books,Supplier C,177,28,471.73,590.11,IN_STOCK
+P0124,Product 124,Clothing,Supplier A,233,27,11.07,15.24,IN_STOCK
+P0125,Product 125,Books,Supplier A,315,51,360.47,481.07,IN_STOCK
+P0126,Product 126,Electronics,Supplier B,236,27,394.72,570.58,IN_STOCK
+P0127,Product 127,Electronics,Supplier C,103,97,35.9,45.23,IN_STOCK
+P0128,Product 128,Clothing,Supplier A,113,28,391.05,492.84,IN_STOCK
+P0129,Product 129,Electronics,Supplier A,399,38,243.34,329.2,IN_STOCK
+P0130,Product 130,Clothing,Supplier A,396,59,204.88,270.93,IN_STOCK
+P0131,Product 131,Home & Kitchen,Supplier A,107,27,242.24,340.83,IN_STOCK
+P0132,Product 132,Home & Kitchen,Supplier A,313,26,299.62,394.63,IN_STOCK
+P0133,Product 133,Groceries,Supplier B,421,68,381.54,491.83,IN_STOCK
+P0134,Product 134,Books,Supplier B,161,13,483.96,573.2,IN_STOCK
+P0135,Product 135,Books,Supplier D,435,28,410.81,575.2,IN_STOCK
+P0136,Product 136,Home & Kitchen,Supplier A,304,98,100.33,138.21,IN_STOCK
+P0137,Product 137,Groceries,Supplier A,429,72,227.31,315.26,IN_STOCK
+P0138,Product 138,Groceries,Supplier B,134,43,34.76,40.32,IN_STOCK
+P0139,Product 139,Home & Kitchen,Supplier A,392,57,443.73,642.8,IN_STOCK
+P0140,Product 140,Toys,Supplier B,83,58,342.55,510.91,IN_STOCK
+P0141,Product 141,Groceries,Supplier A,201,81,439.68,532.29,IN_STOCK
+P0142,Product 142,Electronics,Supplier C,388,17,35.16,43.4,IN_STOCK
+P0143,Product 143,Clothing,Supplier A,111,20,426.71,610.18,IN_STOCK
+P0144,Product 144,Toys,Supplier C,472,67,114.99,160.41,IN_STOCK
+P0145,Product 145,Groceries,Supplier B,277,13,307.93,443.41,IN_STOCK
+P0146,Product 146,Toys,Supplier D,236,48,217.82,302.13,IN_STOCK
+P0147,Product 147,Clothing,Supplier A,390,99,371.73,465.89,IN_STOCK
+P0148,Product 148,Electronics,Supplier A,266,63,45.58,60.9,IN_STOCK
+P0149,Product 149,Home & Kitchen,Supplier B,431,13,205.75,246.03,IN_STOCK
+P0150,Product 150,Toys,Supplier B,358,100,202.5,271.12,IN_STOCK
+P0151,Product 151,Electronics,Supplier D,231,82,267.78,378.31,IN_STOCK
+P0152,Product 152,Clothing,Supplier B,53,46,292.34,376.58,IN_STOCK
+P0153,Product 153,Home & Kitchen,Supplier D,86,30,170.34,221.19,IN_STOCK
+P0154,Product 154,Home & Kitchen,Supplier C,220,57,213.38,265.39,IN_STOCK
+P0155,Product 155,Home & Kitchen,Supplier A,243,48,46.0,55.63,IN_STOCK
+P0156,Product 156,Groceries,Supplier D,124,95,419.73,542.35,IN_STOCK
+P0157,Product 157,Toys,Supplier D,467,16,343.76,415.38,IN_STOCK
+P0158,Product 158,Clothing,Supplier B,119,65,493.32,717.77,IN_STOCK
+P0159,Product 159,Electronics,Supplier C,343,31,403.2,577.95,IN_STOCK
+P0160,Product 160,Books,Supplier A,239,47,247.35,295.78,IN_STOCK
+P0161,Product 161,Home & Kitchen,Supplier A,71,44,318.58,390.91,IN_STOCK
+P0162,Product 162,Electronics,Supplier B,283,27,120.26,175.59,IN_STOCK
+P0163,Product 163,Home & Kitchen,Supplier B,196,96,397.24,560.97,IN_STOCK
+P0164,Product 164,Toys,Supplier B,32,13,397.09,461.5,IN_STOCK
+P0165,Product 165,Home & Kitchen,Supplier C,0,53,7.91,9.0,OUT_OF_STOCK
+P0166,Product 166,Home & Kitchen,Supplier B,190,89,189.06,277.25,IN_STOCK
+P0167,Product 167,Electronics,Supplier B,434,10,469.57,691.76,IN_STOCK
+P0168,Product 168,Toys,Supplier D,348,91,145.26,176.71,IN_STOCK
+P0169,Product 169,Toys,Supplier D,142,15,231.67,319.38,IN_STOCK
+P0170,Product 170,Home & Kitchen,Supplier C,186,71,38.57,50.36,IN_STOCK
+P0171,Product 171,Clothing,Supplier A,161,82,77.12,86.38,IN_STOCK
+P0172,Product 172,Groceries,Supplier D,366,21,218.76,324.3,IN_STOCK
+P0173,Product 173,Clothing,Supplier B,165,22,417.11,545.19,IN_STOCK
+P0174,Product 174,Home & Kitchen,Supplier D,393,49,158.24,183.78,IN_STOCK
+P0175,Product 175,Groceries,Supplier B,141,33,252.91,324.46,IN_STOCK
+P0176,Product 176,Clothing,Supplier D,211,48,424.49,615.4,IN_STOCK
+P0177,Product 177,Books,Supplier C,50000,42,70.6,90.57,IN_STOCK
+P0178,Product 178,Toys,Supplier B,474,64,389.3,444.38,IN_STOCK
+P0179,Product 179,Home & Kitchen,Supplier A,376,77,20.36,25.64,IN_STOCK
+P0180,Product 180,Groceries,Supplier C,226,73,55.63,61.54,IN_STOCK
+P0181,Product 181,Clothing,Supplier A,71,36,479.02,534.15,IN_STOCK
+P0182,Product 182,Toys,Supplier A,336,93,373.04,433.16,IN_STOCK
+P0183,Product 183,Toys,Supplier D,348,35,404.82,527.39,IN_STOCK
+P0184,Product 184,Books,Supplier B,83,62,323.94,393.93,IN_STOCK
+P0185,Product 185,Electronics,Supplier B,215,82,137.22,196.44,IN_STOCK
+P0186,Product 186,Groceries,Supplier A,155,38,7.49,10.99,IN_STOCK
+P0187,Product 187,Home & Kitchen,Supplier A,488,97,23.88,35.71,IN_STOCK
+P0188,Product 188,Electronics,Supplier C,481,32,257.76,345.82,IN_STOCK
+P0189,Product 189,Groceries,Supplier D,348,70,417.05,559.77,IN_STOCK
+P0190,Product 190,Electronics,Supplier C,401,36,266.1,389.45,IN_STOCK
+P0191,Product 191,Clothing,Supplier A,437,58,98.79,119.22,IN_STOCK
+P0192,Product 192,Home & Kitchen,Supplier A,372,37,398.3,581.62,IN_STOCK
+P0193,Product 193,Clothing,Supplier B,135,89,412.83,546.19,IN_STOCK
+P0194,Product 194,Books,Supplier C,447,60,498.61,591.07,IN_STOCK
+P0195,Product 195,Books,Supplier A,222,56,347.77,430.32,IN_STOCK
+P0196,Product 196,Books,Supplier B,381,69,244.52,315.3,IN_STOCK
+P0197,Product 197,Home & Kitchen,Supplier B,256,95,58.13,81.36,IN_STOCK
+P0198,Product 198,Home & Kitchen,Supplier C,299,91,85.0,105.34,IN_STOCK
+P0199,Product 199,Electronics,Supplier D,363,63,417.96,604.2,IN_STOCK
+P0200,Product 200,Home & Kitchen,Supplier C,283,45,68.25,83.65,IN_STOCK
+P0201,IPhone SE,Electronics,Apple,4464064,5000,399.0,499.0,IN_STOCK
+P0202,IPhone 16,Electronics,Apple,49997,30000,599.0,798.97,IN_STOCK
+P0203,IPhone 16 Pro,Electronics,Apple,95000,90000,1199.0,1398.98,IN_STOCK
+P0204,Lenovo Thinkpad,Electronics,Lenovo,1750,45,999.0,1322.99,IN_STOCK
+P0205,Textbook,Books,Arihant,200,50,19.0,28.97,IN_STOCK
