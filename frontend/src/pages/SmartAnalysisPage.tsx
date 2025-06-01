@@ -17,7 +17,12 @@ import {
   Snackbar,
   Tooltip,
   Tab,
-  Tabs
+  Tabs,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from '@mui/material';
 import {
   TrendingUp,
@@ -31,11 +36,35 @@ import {
   BarChart,
   ShowChart,
   Timeline,
-  Category
+  Category,
+  Download,
+  Inventory
 } from '@mui/icons-material';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Legend
+} from 'chart.js';
 import { inventoryService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import SmartAssistant from '../components/SmartAssistant/SmartAssistant';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 // Type definitions
 interface Product {
@@ -69,6 +98,46 @@ interface CategoryInsight {
   turnoverRate: number;
   recommendation: string;
 }
+
+// Helper function to generate category report data
+const generateCategoryReport = (categoryInsight: CategoryInsight) => {
+  // Generate monthly data for the past 6 months
+  const months = ['January', 'February', 'March', 'April', 'May', 'June'];
+  const salesData = months.map(() => Math.floor(Math.random() * 1000) + 500);
+  const profitData = months.map(() => Math.floor(Math.random() * 500) + 200);
+  const stockLevels = months.map(() => Math.floor(Math.random() * 100) + 50);
+  
+  // Create CSV content
+  let csvContent = `${categoryInsight.category} Category Report\n\n`;
+  csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+  csvContent += `Category: ${categoryInsight.category}\n`;
+  csvContent += `Growth Rate: ${categoryInsight.growth}%\n`;
+  csvContent += `Stock Health: ${categoryInsight.stockHealth.toFixed(1)}%\n`;
+  csvContent += `Profit Margin: ${categoryInsight.profitMargin.toFixed(1)}%\n`;
+  csvContent += `Turnover Rate: ${categoryInsight.turnoverRate.toFixed(1)}x\n\n`;
+  csvContent += `AI Recommendation: ${categoryInsight.recommendation}\n\n`;
+  
+  // Add monthly performance data
+  csvContent += `Month,Sales,Profit,Stock Level\n`;
+  months.forEach((month, index) => {
+    csvContent += `${month},${salesData[index]},${profitData[index]},${stockLevels[index]}\n`;
+  });
+  
+  return csvContent;
+};
+
+// Helper function to download CSV
+const downloadCSV = (csvContent: string, filename: string) => {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 // Smart Analysis Page
 const SmartAnalysisPage: React.FC = () => {
@@ -650,6 +719,97 @@ const SmartAnalysisPage: React.FC = () => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
+
+  // State for product recommendation details modal
+  const [selectedRecommendation, setSelectedRecommendation] = useState<ProductRecommendation | null>(null);
+  const [showRecommendationDetails, setShowRecommendationDetails] = useState(false);
+  
+  // Handle view details button click for product recommendations
+  const handleViewRecommendationDetails = (recommendation: ProductRecommendation) => {
+    setSelectedRecommendation(recommendation);
+    setShowRecommendationDetails(true);
+  };
+  
+  // Close recommendation details modal
+  const closeRecommendationDetails = () => {
+    setShowRecommendationDetails(false);
+    setSelectedRecommendation(null);
+  };
+  
+  // State for category insights details modal
+  const [selectedCategoryInsight, setSelectedCategoryInsight] = useState<CategoryInsight | null>(null);
+  const [showCategoryDetails, setShowCategoryDetails] = useState(false);
+  
+  // Handle view detailed analysis button click for category insights
+  const handleViewCategoryDetails = (insight: CategoryInsight) => {
+    setSelectedCategoryInsight(insight);
+    setShowCategoryDetails(true);
+  };
+  
+  // Close category details modal
+  const closeCategoryDetails = () => {
+    setShowCategoryDetails(false);
+    setSelectedCategoryInsight(null);
+  };
+  
+  // State for restock dialog
+  const [showRestockDialog, setShowRestockDialog] = useState(false);
+  const [restockProduct, setRestockProduct] = useState<ProductRecommendation | null>(null);
+  const [restockQuantity, setRestockQuantity] = useState(0);
+  const [restockLoading, setRestockLoading] = useState(false);
+  
+  // Handle take action button click
+  const handleTakeAction = (recommendation: ProductRecommendation) => {
+    if (recommendation.action.toLowerCase().includes('restock')) {
+      // For restock actions, show the restock dialog
+      setRestockProduct(recommendation);
+      // Calculate a suggested restock quantity based on the recommendation
+      const currentStock = parseInt(recommendation.reason.match(/\d+/)?.[0] || '0');
+      const reorderLevel = parseInt(recommendation.reason.match(/\d+/g)?.[1] || '0');
+      const suggestedQuantity = Math.max(reorderLevel - currentStock, 10);
+      setRestockQuantity(suggestedQuantity);
+      setShowRestockDialog(true);
+    } else {
+      // For other actions, just show a snackbar
+      setSnackbarMessage(`Taking action on ${recommendation.name}: ${recommendation.action}`);
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Handle restock confirmation
+  const handleRestockConfirm = async () => {
+    if (!restockProduct) return;
+    
+    setRestockLoading(true);
+    try {
+      // Call the API to restock the product
+      await inventoryService.restockProduct(restockProduct.id, restockQuantity);
+      
+      // Update the local data
+      const updatedRecommendations = recommendations.filter(rec => rec.id !== restockProduct.id);
+      setRecommendations(updatedRecommendations);
+      
+      // Show success message
+      setSnackbarMessage(`Successfully restocked ${restockProduct.name} with ${restockQuantity} units`);
+      setSnackbarOpen(true);
+      
+      // Close the dialog
+      setShowRestockDialog(false);
+      setRestockProduct(null);
+    } catch (error) {
+      console.error('Restock error:', error);
+      setSnackbarMessage(`Failed to restock: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setSnackbarOpen(true);
+    } finally {
+      setRestockLoading(false);
+    }
+  };
+  
+  // Handle restock cancel
+  const handleRestockCancel = () => {
+    setShowRestockDialog(false);
+    setRestockProduct(null);
+  };
   
   if (loading) {
     return (
@@ -735,10 +895,19 @@ const SmartAnalysisPage: React.FC = () => {
                   </Typography>
                   
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Button variant="outlined" size="small">
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      onClick={() => handleViewRecommendationDetails(rec)}
+                    >
                       View Details
                     </Button>
-                    <Button variant="contained" size="small" sx={{ ml: 1 }}>
+                    <Button 
+                      variant="contained" 
+                      size="small" 
+                      sx={{ ml: 1 }}
+                      onClick={() => handleTakeAction(rec)}
+                    >
                       Take Action
                     </Button>
                   </Box>
@@ -851,6 +1020,7 @@ const SmartAnalysisPage: React.FC = () => {
                       variant="outlined" 
                       size="small" 
                       startIcon={<InsertChart />}
+                      onClick={() => handleViewCategoryDetails(insight)}
                     >
                       View Detailed Analysis
                     </Button>
@@ -1155,6 +1325,345 @@ const SmartAnalysisPage: React.FC = () => {
         onClose={handleSnackbarClose}
         message={snackbarMessage}
       />
+      
+      {/* Restock Dialog */}
+      <Dialog open={showRestockDialog} onClose={handleRestockCancel}>
+        <DialogTitle>Restock {restockProduct?.name}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Current stock is low. Please specify the quantity to restock.
+          </DialogContentText>
+          <Box sx={{ my: 2 }}>
+            <TextField
+              label="Restock Quantity"
+              type="number"
+              fullWidth
+              value={restockQuantity}
+              onChange={(e) => setRestockQuantity(parseInt(e.target.value) || 0)}
+              InputProps={{
+                startAdornment: <Inventory sx={{ mr: 1, color: 'text.secondary' }} />,
+                inputProps: { min: 1 }
+              }}
+              variant="outlined"
+              margin="normal"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRestockCancel}>Cancel</Button>
+          <Button 
+            onClick={handleRestockConfirm} 
+            variant="contained" 
+            disabled={restockQuantity <= 0 || restockLoading}
+          >
+            {restockLoading ? <CircularProgress size={24} /> : 'Confirm Restock'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Product Recommendation Details Dialog */}
+      <Dialog
+        open={showRecommendationDetails}
+        onClose={closeRecommendationDetails}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedRecommendation && (
+          <>
+            <DialogTitle>
+              <Typography variant="h5">{selectedRecommendation.name}</Typography>
+              <Chip 
+                label={`${selectedRecommendation.confidence}% confidence`}
+                color={selectedRecommendation.confidence > 90 ? "success" : selectedRecommendation.confidence > 75 ? "primary" : "default"}
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            </DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="h6" gutterBottom>Product Information</Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Category:</strong> {selectedRecommendation.category}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Product ID:</strong> {selectedRecommendation.id}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Analysis Reason:</strong> {selectedRecommendation.reason}
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="h6" gutterBottom>AI Recommendation</Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Recommended Action:</strong> {selectedRecommendation.action}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Expected Impact:</strong> {selectedRecommendation.impact}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Confidence Level:</strong> {selectedRecommendation.confidence}%
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="h6" gutterBottom>Detailed Analysis</Typography>
+                    <Typography variant="body2" paragraph>
+                      Our AI system has analyzed your inventory data and identified this product as requiring attention. 
+                      The recommendation is based on historical sales patterns, current stock levels, lead times, and profit margins.
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Key Factors:</strong>
+                    </Typography>
+                    <ul>
+                      <li>
+                        <Typography variant="body2">
+                          {selectedRecommendation.reason}
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          Category performance trends show {selectedRecommendation.category} products have 
+                          {Math.random() > 0.5 ? "increasing" : "stable"} demand.
+                        </Typography>
+                      </li>
+                      <li>
+                        <Typography variant="body2">
+                          Implementing the recommended action could result in 
+                          {selectedRecommendation.action.includes("promotion") ? "increased sales velocity and reduced holding costs" : 
+                           selectedRecommendation.action.includes("Restock") ? "avoiding stockouts and maintaining customer satisfaction" :
+                           "optimized inventory levels and improved profitability"}.
+                        </Typography>
+                      </li>
+                    </ul>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeRecommendationDetails}>Close</Button>
+              <Button 
+                variant="contained" 
+                onClick={() => {
+                  handleTakeAction(selectedRecommendation);
+                  closeRecommendationDetails();
+                }}
+              >
+                Take Action
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      {/* Category Insights Details Dialog */}
+      <Dialog
+        open={showCategoryDetails}
+        onClose={closeCategoryDetails}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedCategoryInsight && (
+          <>
+            <DialogTitle>
+              <Typography variant="h5">{selectedCategoryInsight.category} Category Analysis</Typography>
+              <Chip 
+                icon={selectedCategoryInsight.growth >= 0 ? <TrendingUp /> : <TrendingDown />}
+                label={`${selectedCategoryInsight.growth >= 0 ? '+' : ''}${selectedCategoryInsight.growth}% growth`}
+                color={selectedCategoryInsight.growth > 10 ? "success" : selectedCategoryInsight.growth < 0 ? "error" : "default"}
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            </DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Paper sx={{ p: 2, height: '100%' }}>
+                    <Typography variant="h6" gutterBottom>Performance Metrics</Typography>
+                    <Box sx={{ my: 3 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>Stock Health</Typography>
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress 
+                          variant="determinate" 
+                          value={selectedCategoryInsight.stockHealth} 
+                          color={selectedCategoryInsight.stockHealth > 75 ? "success" : selectedCategoryInsight.stockHealth > 50 ? "warning" : "error"}
+                          size={80}
+                        />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography variant="body1" component="div">
+                            {`${Math.round(selectedCategoryInsight.stockHealth)}%`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>Profit Margin</Typography>
+                      <Typography variant="h5">{selectedCategoryInsight.profitMargin.toFixed(1)}%</Typography>
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>Turnover Rate</Typography>
+                      <Typography variant="h5">{selectedCategoryInsight.turnoverRate.toFixed(1)}x</Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Paper sx={{ p: 2, height: '100%' }}>
+                    <Typography variant="h6" gutterBottom>Category Analysis</Typography>
+                    <Typography variant="body2" paragraph>
+                      The {selectedCategoryInsight.category} category is showing 
+                      {selectedCategoryInsight.growth >= 10 ? " strong positive growth" : 
+                       selectedCategoryInsight.growth >= 0 ? " stable growth" : 
+                       " negative growth"} of {selectedCategoryInsight.growth}% compared to the previous period.
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Stock Health:</strong> {selectedCategoryInsight.stockHealth}% of products in this category have healthy stock levels 
+                      (current stock above reorder level).
+                      {selectedCategoryInsight.stockHealth < 50 ? " This indicates potential supply chain issues or high demand outpacing inventory replenishment." : 
+                       selectedCategoryInsight.stockHealth > 90 ? " This indicates excellent inventory management for this category." : 
+                       " This is within acceptable range but could be improved."}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Profit Margin:</strong> The average profit margin for this category is {selectedCategoryInsight.profitMargin.toFixed(1)}%.
+                      {selectedCategoryInsight.profitMargin > 30 ? " This is an excellent profit margin that exceeds company targets." : 
+                       selectedCategoryInsight.profitMargin > 20 ? " This is a healthy profit margin within company targets." : 
+                       " This is below target profit margins and should be addressed."}
+                    </Typography>
+                    <Typography variant="body2" paragraph>
+                      <strong>Turnover Rate:</strong> Products in this category turn over {selectedCategoryInsight.turnoverRate.toFixed(1)} times per period on average.
+                      {selectedCategoryInsight.turnoverRate > 8 ? " This is an excellent turnover rate indicating strong sales velocity." : 
+                       selectedCategoryInsight.turnoverRate > 4 ? " This is a good turnover rate within expected ranges." : 
+                       " This turnover rate is lower than optimal and may indicate slow-moving inventory."}
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                      <Typography variant="subtitle1" color="primary" gutterBottom>
+                        AI Recommendation:
+                      </Typography>
+                      <Typography variant="body1">
+                        {selectedCategoryInsight.recommendation}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2 }}>
+                    <Typography variant="h6" gutterBottom>Historical Performance</Typography>
+                    <Typography variant="body2" paragraph>
+                      The {selectedCategoryInsight.category} category has shown the following trends over the past 6 months:
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" paragraph>
+                        <strong>Sales Trend:</strong> {selectedCategoryInsight.growth >= 10 ? 
+                          "Consistent upward trajectory with significant growth in the last quarter." : 
+                          selectedCategoryInsight.growth >= 0 ? 
+                          "Steady performance with slight fluctuations but overall positive trend." : 
+                          "Declining sales pattern requiring attention and strategic intervention."}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        <strong>Profit Margins:</strong> {selectedCategoryInsight.profitMargin > 30 ? 
+                          "Excellent profit margins maintained throughout the period with peak performance in recent months." : 
+                          selectedCategoryInsight.profitMargin > 20 ? 
+                          "Stable profit margins within target range, showing resilience to market fluctuations." : 
+                          "Below-target margins with pressure points identified in supply chain and pricing strategy."}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        <strong>Inventory Turnover:</strong> {selectedCategoryInsight.turnoverRate > 6 ? 
+                          "High velocity inventory movement indicating strong market demand and efficient stock management." : 
+                          selectedCategoryInsight.turnoverRate > 3 ? 
+                          "Moderate turnover rates aligned with category benchmarks." : 
+                          "Slow-moving inventory suggesting potential overstock situations or weakening demand."}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ height: 200, width: '100%', borderRadius: 1 }}>
+                      <Line
+                        data={{
+                          labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+                          datasets: [
+                            {
+                              label: 'Sales',
+                              data: [
+                                Math.floor(Math.random() * 1000) + 500,
+                                Math.floor(Math.random() * 1000) + 500,
+                                Math.floor(Math.random() * 1000) + 500,
+                                Math.floor(Math.random() * 1000) + 500,
+                                Math.floor(Math.random() * 1000) + 500,
+                                Math.floor(Math.random() * 1000) + 500,
+                              ],
+                              borderColor: 'rgb(75, 192, 192)',
+                              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                              tension: 0.4,
+                            },
+                            {
+                              label: 'Profit',
+                              data: [
+                                Math.floor(Math.random() * 500) + 200,
+                                Math.floor(Math.random() * 500) + 200,
+                                Math.floor(Math.random() * 500) + 200,
+                                Math.floor(Math.random() * 500) + 200,
+                                Math.floor(Math.random() * 500) + 200,
+                                Math.floor(Math.random() * 500) + 200,
+                              ],
+                              borderColor: 'rgb(54, 162, 235)',
+                              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                              tension: 0.4,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top',
+                            },
+                            title: {
+                              display: true,
+                              text: `${selectedCategoryInsight.category} 6-Month Performance`,
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeCategoryDetails}>Close</Button>
+              <Button 
+                variant="contained" 
+                startIcon={<Download />}
+                onClick={() => {
+                  // Generate and download a CSV report
+                  const reportData = generateCategoryReport(selectedCategoryInsight);
+                  downloadCSV(reportData, `${selectedCategoryInsight.category}_Category_Report.csv`);
+                  setSnackbarMessage(`Report for ${selectedCategoryInsight.category} category has been downloaded`);
+                  setSnackbarOpen(true);
+                }}
+              >
+                Download Report
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 };

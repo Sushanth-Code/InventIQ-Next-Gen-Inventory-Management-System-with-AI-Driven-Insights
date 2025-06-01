@@ -129,6 +129,19 @@ export const inventoryService = {
       throw new Error(error.response?.data?.message || 'Failed to record transaction');
     }
   },
+  
+  restockProduct: async (productId: string, quantity: number) => {
+    try {
+      const response = await api.post('/inventory/restock', {
+        product_id: productId,
+        quantity: quantity
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error restocking product:', error);
+      throw new Error(error.response?.data?.message || 'Failed to restock product');
+    }
+  },
 };
 
 // Assistant services

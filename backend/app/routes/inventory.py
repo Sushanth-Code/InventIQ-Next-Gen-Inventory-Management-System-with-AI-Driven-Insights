@@ -190,6 +190,60 @@ def delete_product(current_user, product_id):
         print(f'Error in delete_product: {str(e)}')
         return jsonify({'message': f'Error occurred: {str(e)}'}), 500
 
+@inventory_bp.route('/restock', methods=['POST'])
+@token_required
+def restock_product(current_user):
+    try:
+        # Check permissions
+        if current_user.role not in ['admin', 'manager', 'staff']:
+            return jsonify({'message': 'Permission denied!'}), 403
+            
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data or 'product_id' not in data or 'quantity' not in data:
+            return jsonify({'message': 'Missing required fields: product_id and quantity'}), 400
+            
+        product_id = data['product_id']
+        quantity = int(data['quantity'])
+        
+        # Validate quantity
+        if quantity <= 0:
+            return jsonify({'message': 'Quantity must be greater than zero'}), 400
+            
+        # Find the product
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'message': f'Product with ID {product_id} not found'}), 404
+            
+        # Update the stock
+        previous_stock = product.current_stock
+        product.current_stock += quantity
+        
+        # Record the transaction
+        transaction = Transaction(
+            product_id=product_id,
+            transaction_type='restock',
+            quantity=quantity,
+            transaction_date=datetime.now()
+        )
+        
+        db.session.add(transaction)
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Product restocked successfully!',
+            'product': product.to_dict(),
+            'previous_stock': previous_stock,
+            'new_stock': product.current_stock,
+            'restocked_quantity': quantity
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f'Error restocking product: {str(e)}')
+        return jsonify({'message': f'Error restocking product: {str(e)}'}), 500
+
 @inventory_bp.route('/transaction', methods=['POST'])
 @token_required
 def record_transaction(current_user):
