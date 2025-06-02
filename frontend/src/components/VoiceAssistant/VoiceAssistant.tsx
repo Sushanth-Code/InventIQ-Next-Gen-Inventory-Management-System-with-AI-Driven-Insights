@@ -33,13 +33,7 @@ const VoiceAssistant: React.FC = () => {
   
   return (
     <>
-      {/* Floating button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-600 transition-all"
-      >
-        <span className="material-icons text-2xl">mic</span>
-      </button>
+      {/* Floating button removed as requested */}
       
       {/* Voice assistant panel */}
       {isOpen && (

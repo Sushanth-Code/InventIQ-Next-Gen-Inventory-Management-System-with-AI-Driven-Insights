@@ -227,22 +227,7 @@ const DashboardPage: React.FC = () => {
         <Typography variant="h5" component="h1" fontWeight="bold">
           Dashboard Overview
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-            Monday, April 7, 2025 • Last updated: 5 minutes ago
-          </Typography>
-          {/* Voice Assistant Button */}
-          <Button
-            variant="contained"
-            color={isListening ? "error" : "primary"}
-            startIcon={isListening ? <MicOffIcon /> : <SearchIcon />}
-            onClick={isListening ? stopListening : startListening}
-            size="small"
-            sx={{ ml: 2 }}
-          >
-            {isListening ? "Stop" : "Ask me"}
-          </Button>
-        </Box>
+        {/* Header right section removed as requested */}
       </Box>
       
       {/* Voice Assistant Transcript */}
@@ -680,18 +665,7 @@ const DashboardPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" component="h2">Inventory Management</Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              placeholder="Search products..."
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 250 }}
-            />
+            {/* Search box removed as requested */}
             <Button 
               variant="contained" 
               color="primary" 

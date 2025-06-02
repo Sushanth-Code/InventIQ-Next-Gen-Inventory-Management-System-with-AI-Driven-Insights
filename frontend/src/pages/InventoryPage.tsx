@@ -197,12 +197,14 @@ const InventoryPage: React.FC = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-dark">Inventory Management</h1>
-        <Link 
-          to="/inventory/add" 
-          className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Add Product
-        </Link>
+        {hasPermission('add_product') && (
+          <Link 
+            to="/inventory/add" 
+            className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Add Product
+          </Link>
+        )}
       </div>
       
       {/* Sale Dialog */}
