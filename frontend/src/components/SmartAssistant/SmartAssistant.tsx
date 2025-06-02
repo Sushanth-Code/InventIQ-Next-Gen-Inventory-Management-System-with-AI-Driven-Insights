@@ -62,6 +62,28 @@ const SmartAssistant: React.FC = () => {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speechEnabled, setSpeechEnabled] = useState(true); // Speech enabled by default
   
+  // Convert number words to digits (e.g., "six" to "6")
+  const convertNumberWordsToDigits = (text: string): string => {
+    const numberWords: {[key: string]: string} = {
+      'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+      'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+      'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
+      'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18', 'nineteen': '19',
+      'twenty': '20', 'thirty': '30', 'forty': '40', 'fifty': '50',
+      'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90'
+    };
+    
+    // Replace full number words with digits
+    let result = text.toLowerCase();
+    Object.keys(numberWords).forEach(word => {
+      // Use word boundary to ensure we're replacing whole words
+      const regex = new RegExp('\\b' + word + '\\b', 'gi');
+      result = result.replace(regex, numberWords[word]);
+    });
+    
+    return result;
+  };
+
   // Ref for messages container to auto-scroll
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
@@ -103,6 +125,9 @@ const SmartAssistant: React.FC = () => {
         
         // Clean up the transcript - remove trailing periods and other punctuation
         transcript = transcript.trim().replace(/[.!?]+$/, '');
+        
+        // Normalize the transcript by converting numbers in words to digits
+        transcript = convertNumberWordsToDigits(transcript);
         
         // Handle common speech recognition errors for greetings
         if (transcript.toLowerCase() === 'high') {
@@ -373,6 +398,26 @@ const parseInventoryCommand = (command: string): {
     }
   }
   
+  // First convert any number words to digits in the command
+  const commandWithDigits = convertNumberWordsToDigits(commandLower);
+  console.debug('Command after number word conversion:', commandWithDigits);
+  
+  // DEBUGGING: Log the command we're about to parse
+  console.debug('PARSING COMMAND:', commandWithDigits);
+  
+  // Special case: Direct check for "X units of product Y" pattern
+  const unitsOfProductPattern = commandWithDigits.match(/\b(\d+)\s+(?:units?|items?|pieces?|qty|quantity)?\s+(?:of|for)\s+product\s+(\d+)\b/i);
+  if (unitsOfProductPattern) {
+    console.debug('DIRECT MATCH - Product ID:', unitsOfProductPattern[2], 'Quantity:', unitsOfProductPattern[1]);
+    return {
+      action,
+      productIdentifier: unitsOfProductPattern[2],
+      identifierType: 'id',
+      quantity: parseInt(unitsOfProductPattern[1]) || quantity,
+      category
+    };
+  }
+  
   // STEP 1: PRIORITIZE PRODUCT NAME EXTRACTION FIRST
   // This is the most important change - we look for product names BEFORE numeric IDs
   // to avoid misinterpreting numbers in product names as product IDs
@@ -405,15 +450,15 @@ const parseInventoryCommand = (command: string): {
       category
     };
   }
-  
+
   // Pattern 3: Direct product name after action verb
   // This handles "Restock Samsung Book 2 Pro" without "with X units"
   // Also handles "Restock product iPhone SE" by treating "product" as part of the name
-  const directProductMatch = commandLower.match(/\b(?:restock|sell|add|sold)\s+(?:product\s+)?([\w\s\d\-&\.,'\/\(\)\+]+?)(?:\s*$|\s+(?:by|with|for|to|from|at|in))/i);
-  if (directProductMatch && directProductMatch[1]) {
-    const productName = directProductMatch[1].trim();
+  const directNameMatch = commandLower.match(/\b(?:restock|sell|add|sold)\s+(?:product\s+)?([\w\s\d\-&\.,'\/(\)\+]+?)(?:\s*$|\s+(?:by|with|for|to|from|at|in))/i);
+  if (directNameMatch && directNameMatch[1]) {
+    const productName = directNameMatch[1].trim();
     if (productName && !/(restock|sell|add|sold)/i.test(productName.toLowerCase())) {
-      console.debug('Found product name with direct pattern:', productName);
+      console.debug('Found product name in direct pattern:', productName);
       return {
         action,
         productIdentifier: productName,
@@ -424,26 +469,70 @@ const parseInventoryCommand = (command: string): {
     }
   }
   
-  // Pattern 4: "X units of [Product Name]"
-  const unitsOfProductNameMatch = commandLower.match(/\b\d+\s*(?:units?|items?|pieces?|qty|quantity)?\s+(?:of|for)\s+(?:product\s+)?([\w\s\d\-&\.,'\/\(\)\+]+?)(?:\s*$|\s+(?:by|with|for|to|from|at|in))/i);
-  if (unitsOfProductNameMatch && unitsOfProductNameMatch[1] && !unitsOfProductNameMatch[1].match(/^(?:item|number|id|#)\s*\d+$/i)) {
-    const productName = unitsOfProductNameMatch[1].trim();
-    console.debug('Found product name in "X units of [Product Name]" pattern:', productName);
+  // Pattern 4b: "X units of product Y" where Y is a number (MUST CHECK THIS FIRST)
+  // Debug the command we're processing
+  console.debug('Processing command for "X units of product Y" pattern:', commandWithDigits);
+  const unitsOfProductNumberMatch = commandWithDigits.match(/\b(\d+)\s*(?:units?|items?|pieces?|qty|quantity)?\s+(?:of|for)\s+product\s+(\d+)\b/i);
+  if (unitsOfProductNumberMatch && unitsOfProductNumberMatch[2]) {
+    // Extract the quantity and product ID
+    const extractedQuantity = parseInt(unitsOfProductNumberMatch[1]);
+    if (!quantity && !isNaN(extractedQuantity)) {
+      quantity = extractedQuantity;
+    }
+    
+    console.debug('Found product ID in "X units of product Y" pattern:', unitsOfProductNumberMatch[2]);
     return {
       action,
-      productIdentifier: productName,
-      identifierType: 'name',
+      productIdentifier: unitsOfProductNumberMatch[2].trim(),
+      identifierType: 'id',
       quantity,
       category
     };
   }
+  
+  // Pattern 4: "X units of [Product Name]"
+  const unitsOfProductNameMatch = commandWithDigits.match(/\b(\d+)\s*(?:units?|items?|pieces?|qty|quantity)?\s+(?:of|for)\s+(?!product\s+\d+)([\w\s\d\-&\.,'\/(\)\+]+?)(?:\s*$|\s+(?:by|with|for|to|from|at|in))/i);
+  if (unitsOfProductNameMatch && unitsOfProductNameMatch[2]) {
+    // Extract the quantity
+    const extractedQuantity = parseInt(unitsOfProductNameMatch[1]);
+    if (!quantity && !isNaN(extractedQuantity)) {
+      quantity = extractedQuantity;
+    }
+    
+    // Check if it's just a number (e.g., "100 units of 6")
+    const justNumberCheck = unitsOfProductNameMatch[2].match(/^(\d+)$/i);
+    if (justNumberCheck) {
+      console.debug('Found product ID in "X units of Y" pattern:', justNumberCheck[1]);
+      return {
+        action,
+        productIdentifier: justNumberCheck[1].trim(),
+        identifierType: 'id',
+        quantity,
+        category
+      };
+    }
+    
+    // If it's not a product number pattern, treat it as a product name
+    if (!unitsOfProductNameMatch[2].match(/^(?:item|number|id|#)\s*\d+$/i)) {
+      const productName = unitsOfProductNameMatch[2].trim();
+      console.debug('Found product name in "X units of [Product Name]" pattern:', productName);
+      return {
+        action,
+        productIdentifier: productName,
+        identifierType: 'name',
+        quantity,
+        category
+      };
+    }
+  }
+  // The check for unitsOfProductNumberMatch is already handled above
   
   // STEP 2: ONLY AFTER TRYING PRODUCT NAMES, CHECK FOR PRODUCT IDs
   
   // Check for specific product ID patterns
   // Pattern 1: "product X" or "product number X" or "item X" where X is a number
   // This should only match when X is a number, not a product name like "iPhone SE"
-  const productNumberMatch = commandLower.match(/\b(?:product|item)\s+(?:number\s+|id\s+|#)?(\d+)\b/i);
+  const productNumberMatch = commandWithDigits.match(/\b(?:product|item)\s+(?:number\s+|id\s+|#)?(\d+)\b/i);
   if (productNumberMatch) {
     console.debug('Product number match:', productNumberMatch);
     const productId = productNumberMatch[1].trim();
@@ -519,7 +608,7 @@ const parseInventoryCommand = (command: string): {
 
   // Pattern 7: Just a number (last resort)
   // Only use this if we haven't found any other product identifier
-  const justNumberMatch = commandLower.match(/\b(\d+)\b/);
+  const justNumberMatch = commandWithDigits.match(/\b(\d+)\b/);
   const quantityValue = quantity ? quantity.toString() : null;
   if (justNumberMatch && justNumberMatch[1] !== quantityValue) {
     console.debug('Found product ID in general number pattern:', justNumberMatch[1]);
