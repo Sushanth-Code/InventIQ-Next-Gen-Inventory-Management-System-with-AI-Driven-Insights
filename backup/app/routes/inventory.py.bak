@@ -29,8 +29,8 @@ def get_product(current_user, product_id):
 @inventory_bp.route('/', methods=['POST'])
 @token_required
 def add_product(current_user):
-    if current_user.role != 'admin':
-        return jsonify({'message': 'Permission denied! Only admin can add products.'}), 403
+    if current_user.role not in ['admin', 'manager']:
+        return jsonify({'message': 'Permission denied!'}), 403
         
     try:
         data = request.get_json()
@@ -110,8 +110,8 @@ def add_product(current_user):
 @inventory_bp.route('/<product_id>', methods=['PUT'])
 @token_required
 def update_product(current_user, product_id):
-    if current_user.role != 'admin':
-        return jsonify({'message': 'Permission denied! Only admin can update products.'}), 403
+    if current_user.role not in ['admin', 'manager']:
+        return jsonify({'message': 'Permission denied!'}), 403
         
     product = Product.query.get_or_404(product_id)
     data = request.get_json()
@@ -195,7 +195,7 @@ def delete_product(current_user, product_id):
 def restock_product(current_user):
     try:
         # Check permissions
-        if current_user.role != 'admin' and current_user.role != 'staff':
+        if current_user.role not in ['admin', 'manager', 'staff']:
             return jsonify({'message': 'Permission denied!'}), 403
             
         data = request.get_json()

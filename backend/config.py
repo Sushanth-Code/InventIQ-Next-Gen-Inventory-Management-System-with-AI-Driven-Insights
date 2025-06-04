@@ -10,9 +10,6 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # AI/LLM Configuration
-    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or 'AIzaSyCh4zmowjK0E_v-PPCzMr48C9KuAAv-9EI'
-    
     # Ollama Configuration
     USE_OLLAMA = os.environ.get('USE_OLLAMA', 'True').lower() in ('true', '1', 't')
     OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
