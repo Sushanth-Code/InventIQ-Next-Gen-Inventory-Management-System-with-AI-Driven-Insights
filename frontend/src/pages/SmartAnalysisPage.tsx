@@ -356,47 +356,42 @@ const SmartAnalysisPage: React.FC = () => {
       days.push(dayLabel);
     }
     
-    // Use historical sales if available, otherwise generate random data with daily fluctuations
-    const salesData = days.map((_, index) => {
-      // Base value with some randomness
-      const baseValue = product.historical_sales ? 
-        (product.historical_sales[Object.keys(product.historical_sales)[0]] || 30) / 30 : // Divide monthly by 30 for daily
-        Math.floor(Math.random() * 10) + 2; // 2-12 units per day
-      
-      // Add day of week pattern (higher on weekends)
-      const dayOfWeek = (today.getDay() - (29 - index) + 7) % 7; // 0 = Sunday, 6 = Saturday
-      const weekendBoost = (dayOfWeek === 0 || dayOfWeek === 6) ? 1.5 : 1.0;
-      
-      // Add some random variation
-      const variation = Math.random() * 0.4 + 0.8; // 0.8-1.2 multiplier
-      
-      return Math.round(baseValue * weekendBoost * variation);
-    });
+    // Initialize sales data array with zeros
+    const salesData = new Array(days.length).fill(0);
+    
+    // If historical sales data exists, map it to the correct days
+    const historicalSales = product.historical_sales || {};
+    const historicalDays = Object.keys(historicalSales).sort().slice(-30);
+    
+    if (historicalDays.length > 0) {
+      // Map historical sales to the salesData array
+      historicalDays.forEach((day, index) => {
+        const dayIndex = days.length - historicalDays.length + index;
+        if (dayIndex >= 0 && historicalSales[day] !== undefined) {
+          salesData[dayIndex] = historicalSales[day];
+        }
+      });
+    }
     
     // Calculate profit based on sales and margins
     const profitData = salesData.map(sales => 
       Math.round(sales * (product.selling_price - product.purchase_price)));
     
-    // Generate stock levels that decrease daily and get replenished periodically
+    // Calculate stock levels based on sales
+    const stockData: number[] = [];
     let currentStock = product.current_stock;
-    const stockData = days.map((_, index) => {
-      // Decrease stock by sales
-      currentStock -= salesData[index];
-      
-      // Add some random variation
-      const variation = Math.floor(Math.random() * 3) - 1; // -1 to +1
-      currentStock += variation;
-      
-      // Simulate restocks every 7 days
-      if (index > 0 && index % 7 === 0) {
-        const restockAmount = Math.floor(Math.random() * 30) + 20; // 20-50 units
-        currentStock += restockAmount;
-      }
-      
-      // Ensure stock doesn't go below 0
-      currentStock = Math.max(0, currentStock);
-      
-      return currentStock;
+    
+    // Start from the most recent day and work backwards to calculate stock levels
+    for (let i = salesData.length - 1; i >= 0; i--) {
+      // Add sales back to stock to get the starting stock for the day
+      currentStock += salesData[i];
+      stockData[i] = currentStock;
+    }
+    
+    // If we have restock data, we could incorporate it here
+    // For now, we'll just ensure stock never goes below 0
+    stockData.forEach((_, i) => {
+      stockData[i] = Math.max(0, stockData[i]);
     });
     
     // Create CSV content
@@ -414,9 +409,12 @@ const SmartAnalysisPage: React.FC = () => {
     csvContent += `Lead Time: ${product.lead_time} days\n\n`;
     
     // Add daily performance data
-    csvContent += `Day,Sales (Units),Profit ($),Stock Level\n`;
+    csvContent += `Day,Date,Sales (Units),Profit ($),Stock Level\n`;
     days.forEach((day, index) => {
-      csvContent += `${day},${salesData[index]},${profitData[index]},${stockData[index]}\n`;
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - index));
+      const dateStr = date.toISOString().split('T')[0];
+      csvContent += `${day},${dateStr},${salesData[index]},${profitData[index]},${stockData[index]}\n`;
     });
     
     return {

@@ -128,22 +128,84 @@ const TrendsPage: React.FC = () => {
   
   // Calculate trending products based on historical sales
   const calculateTrendingProducts = () => {
-    // Sort products by average sales in historical_sales
-    return filteredProducts
-      .filter((p: any) => p.historical_sales)
-      .map((p: any) => {
-        const salesValues = Object.values(p.historical_sales) as number[];
-        const avgSales = salesValues.reduce((sum: number, val: number) => sum + val, 0) / salesValues.length;
-        return {
-          ...p,
-          avgSales,
-          trend: Math.random() > 0.5 ? 'up' : 'down', // Simplified trend calculation
-          trendPercentage: Math.floor(Math.random() * 30) + 1 // Random percentage for demo
-        };
-      })
-      .sort((a: any, b: any) => b.avgSales - a.avgSales)
-      .slice(0, 10);
-  };
+    try {
+      // Get products with historical sales data
+      const productsWithSales = (filteredProducts || [])
+        .filter((p: any) => p?.historical_sales && Object.keys(p.historical_sales).length > 0);
+      
+      if (productsWithSales.length === 0) return [];
+      
+      // Sort by most recent sales activity first
+      const sortedProducts = [...productsWithSales].sort((a: any, b: any) => {
+        try {
+          // Get the most recent sales data
+          const aSales = Object.entries(a?.historical_sales || {})
+            .sort(([dateA], [dateB]) => (dateB || '').localeCompare(dateA || ''))
+            .slice(0, 3) // Look at last 3 days
+            .reduce((sum, [_, val]) => sum + (Number(val) || 0), 0);
+
+          const bSales = Object.entries(b?.historical_sales || {})
+            .sort(([dateA], [dateB]) => (dateB || '').localeCompare(dateA || ''))
+            .slice(0, 3) // Look at last 3 days
+            .reduce((sum, [_, val]) => sum + (Number(val) || 0), 0);
+
+          return (bSales || 0) - (aSales || 0); // Sort by most recent sales first
+        } catch (e) {
+          console.error('Error sorting products:', e);
+          return 0;
+        }
+      });
+
+      // Now calculate trend data for the top products
+      return sortedProducts.slice(0, 10).map((p: any) => {
+        try {
+          const salesArray = Object.entries(p?.historical_sales || {})
+            .sort(([dateA], [dateB]) => (dateA || '').localeCompare(dateB || ''))
+            .map(([_, value]) => Number(value) || 0);
+
+          let trend = 'stable';
+          let trendPercentage = 0;
+          const totalSales = salesArray.reduce((a, b) => a + b, 0);
+
+          if (salesArray.length >= 2) {
+            const midPoint = Math.floor(salesArray.length / 2);
+            const firstHalf = salesArray.slice(0, midPoint);
+            const secondHalf = salesArray.slice(midPoint);
+            const firstHalfSum = firstHalf.reduce((a, b) => a + b, 0);
+            const secondHalfSum = secondHalf.reduce((a, b) => a + b, 0);
+            const firstHalfAvg = firstHalfSum / (firstHalf.length || 1);
+            const secondHalfAvg = secondHalfSum / (secondHalf.length || 1);
+
+            if (secondHalfAvg > firstHalfAvg) {
+              trend = 'up';
+              trendPercentage = ((secondHalfAvg - firstHalfAvg) / (firstHalfAvg || 1)) * 100;
+            } else if (secondHalfAvg < firstHalfAvg) {
+              trend = 'down';
+              trendPercentage = ((firstHalfAvg - secondHalfAvg) / (firstHalfAvg || 1)) * 100;
+            }
+          }
+
+          return {
+            ...p,
+            avgSales: totalSales, // Total sales as a number
+            trend,
+            trendPercentage: Math.round(trendPercentage)
+          };
+        } catch (e) {
+          console.error('Error processing product:', p?.id, e);
+          return {
+            ...p,
+            avgSales: 0,
+            trend: 'stable',
+            trendPercentage: 0
+          };
+        }
+      });
+    } catch (e) {
+      console.error('Error in calculateTrendingProducts:', e);
+      return [];
+    }
+  };  
   
   const trendingProductsData = calculateTrendingProducts();
   
@@ -348,11 +410,11 @@ const TrendsPage: React.FC = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsBarChart
                   data={categoryTrends}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis width={55} tickMargin={10} />
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="avg_growth" fill="#82ca9d" name="Growth %" />
