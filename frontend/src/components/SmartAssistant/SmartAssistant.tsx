@@ -970,7 +970,7 @@ const parseInventoryCommand = (command: string): {
       const normalizedQuery = currentQuery.trim().toLowerCase();
       
       // Handle time question
-      if (normalizedQuery.includes('what is the time') || normalizedQuery.includes('what time is it')) {
+      if (normalizedQuery.includes('what is the time') || normalizedQuery.includes('what time is it') || normalizedQuery.includes('what\'s the time')) {
         const now = new Date();
         const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const timeResponse = `The current time is ${timeString}.`;
@@ -986,7 +986,7 @@ const parseInventoryCommand = (command: string): {
       }
       
       // Handle date question
-      if (normalizedQuery.includes('what is the date') || normalizedQuery.includes('what day is it')) {
+      if (normalizedQuery.includes('what is the date') || normalizedQuery.includes('what day is it') || normalizedQuery.includes('what is today\'s date') || normalizedQuery.includes('what is date today')) {
         const now = new Date();
         const dateString = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const dateResponse = `Today is ${dateString}.`;
@@ -1105,7 +1105,7 @@ const parseInventoryCommand = (command: string): {
                       transaction_type: 'sale',
                       quantity: inventoryCommand.quantity
                     });
-                    const newStockLevel = result.updated_stock || (productByIndex.currentStock - inventoryCommand.quantity);
+                    const newStockLevel = result.updated_stock !== undefined ? result.updated_stock : (productByIndex.currentStock - inventoryCommand.quantity);
                     responseText = `I've recorded a sale of ${inventoryCommand.quantity} units of ${productByIndex.name}. The new stock level is ${newStockLevel} units.`;
                   }
                 }
@@ -1169,7 +1169,7 @@ const parseInventoryCommand = (command: string): {
                 transaction_type: 'sale',
                 quantity: inventoryCommand.quantity
               });
-              const newStockLevel = result.updated_stock || (product.currentStock - inventoryCommand.quantity);
+              const newStockLevel = result.updated_stock !== undefined ? result.updated_stock : (product.currentStock - inventoryCommand.quantity);
               responseText = `I've recorded a sale of ${inventoryCommand.quantity} units of ${product.name}. The new stock level is ${newStockLevel} units.`;
             }
           }
@@ -1444,7 +1444,7 @@ const parseInventoryCommand = (command: string): {
               </Button>
             </Box>
             <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
-              Try asking anything! For example: "What are the trending products?", "Tell me about inventory management", or even "What's the meaning of life?"
+              Try asking anything! For example: "What are the Low Stock Products?", "Tell me about InventIQ", or even "What are the Out Of Stock Products?"
             </Typography>
           </Box>
         </Paper>
