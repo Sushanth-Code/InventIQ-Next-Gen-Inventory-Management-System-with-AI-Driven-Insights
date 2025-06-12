@@ -123,9 +123,6 @@ This project was developed by a talented team of AIML experts:
 
 </div>
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
