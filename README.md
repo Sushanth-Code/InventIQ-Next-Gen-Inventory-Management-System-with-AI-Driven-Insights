@@ -2,7 +2,7 @@
 
 # 🚀 InventIQ - Next-Gen Smart Inventory Management System
 
-<img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"/> <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"/> <img src="https://img.shields.io/badge/build-passing-success.svg" alt="Build"/> <img src="https://img.shields.io/badge/React-18.2.0-61DAFB.svg?logo=react" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-5.0.4-3178C6.svg?logo=typescript" alt="TypeScript"/>
+<img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"/>  <img src="https://img.shields.io/badge/build-passing-success.svg" alt="Build"/> <img src="https://img.shields.io/badge/React-18.2.0-61DAFB.svg?logo=react" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-5.0.4-3178C6.svg?logo=typescript" alt="TypeScript"/>
 
 </div>
 
