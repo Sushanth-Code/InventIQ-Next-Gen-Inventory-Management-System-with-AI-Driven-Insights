@@ -110,9 +110,9 @@
 - **Real-time Notifications**: Stay informed about critical inventory events with customizable alerts
 - **Comprehensive Analytics**: Make data-driven decisions with detailed reports and visualizations
 
-## 👨‍💻 Creators
+## 👨‍💻 Creator
 
-This project was developed by a talented team of AIML experts:
+This project was developed by a talented team of AIML expert:
 
 <div align="center">
 
@@ -125,6 +125,6 @@ This project was developed by a talented team of AIML experts:
 
 <div align="center">
 
- Made by Team InventIQ
+Made by Team InventIQ
 
 </div>
