@@ -119,7 +119,7 @@
 
 ## 👨‍💻 Creator
 
-This project was developed by a talented team of AIML expert:
+This project was developed by a talented AIML expert:
 
 <div align="center">
 
