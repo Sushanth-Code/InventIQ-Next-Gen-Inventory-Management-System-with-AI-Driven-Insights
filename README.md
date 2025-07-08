@@ -10,7 +10,7 @@
   <b>InventIQ</b> revolutionizes inventory management with AI-powered insights, predictive analytics, and a beautiful, intuitive interface.
 </p>
 
-![InventIQ Dashboard](https://i.ibb.co/XsZJ6JC/inventory-management-system.jpg)
+![InventIQ Dashboard](./screenshots/dashboard-preview.jpg)
 
 ## ✨ Features
 
@@ -108,7 +108,7 @@
 
 | Dashboard | Inventory Management | Smart Analysis |
 |-----------|----------------------|----------------|
-| ![Dashboard](https://i.ibb.co/JQrXgdK/dashboard.jpg) | ![Inventory](https://i.ibb.co/Qf7Nj7P/inventory.jpg) | ![Analysis](https://i.ibb.co/4PmCJKL/analysis.jpg) |
+| ![Dashboard](./screenshots/dashboard-full.jpg) | ![Inventory](./screenshots/inventory.jpg) | ![Analysis](./screenshots/analysis.jpg) |
 
 </div>
 
