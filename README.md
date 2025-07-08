@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 InventIQ - The Future of Inventory Management
+# 🚀 InventIQ - Next-Gen Inventory Management System with AI Driven Insights
 
 <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"/>  <img src="https://img.shields.io/badge/build-passing-success.svg" alt="Build"/> <img src="https://img.shields.io/badge/React-18.2.0-61DAFB.svg?logo=react" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-5.0.4-3178C6.svg?logo=typescript" alt="TypeScript"/>
 
@@ -17,7 +17,7 @@
 - **📦 Comprehensive Inventory Management**: Seamlessly add, edit, delete products with detailed tracking and history
 - **🤖 AI-Powered Smart Assistant**: Get intelligent insights and actionable recommendations for inventory optimization
 - **📈 Predictive Analytics**: ML-driven forecasting for demand prediction and inventory planning
-- **📱 Responsive Design**: Beautiful UI that works flawlessly across desktop, tablet, and mobile devices
+- **📱 Responsive Design**: Beautiful UI that works flawlessly across Laptop Localhost
 - **🔍 Smart Search & Filtering**: Quickly find products with advanced search capabilities
 - **🧮 Inventory Calculator**: Sophisticated algorithms to calculate optimal reorder points and quantities
 - **🔔 Smart Notifications**: Customizable alerts for low stock, price changes, and inventory events
@@ -70,7 +70,7 @@
    - Start the Ollama server
    - Download the required model:
      ```bash
-     ollama pull llama2
+     ollama pull llama3
      ```
 
 5. **Configure environment variables**
@@ -81,7 +81,7 @@
 
 6. **Start the backend server**
    ```bash
-   python app.py
+   python main.py
    ```
 
 7. **Start the frontend development server**
@@ -115,16 +115,7 @@
 - **Data Protection**: Enterprise-grade security measures to keep your inventory data safe and secure.
 
 ### 🌐 Always Available
-- **Cloud-Ready**: Access your inventory from anywhere, on any device.
 - **Offline Mode**: Continue working even without an internet connection.
-
-## 🏆 Key Benefits
-
-- **30% Reduction** in excess inventory costs through intelligent forecasting
-- **99.9% Accuracy** in inventory tracking with our advanced reconciliation system
-- **40% Faster** operations with our streamlined, intuitive interface
-- **24/7 AI Monitoring**: Your personal inventory assistant never sleeps, constantly monitoring and optimizing your stock levels
-- **Seamless Integration**: Works with your existing tools and systems for a frictionless experience
 
 ## 👨‍💻 Creator
 
@@ -139,8 +130,4 @@ This project was developed by a talented team of AIML experts:
 
 </div>
 
-<div align="center">
 
-Made with ❤️ by Team InventIQ
-
-</div>
