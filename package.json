@@ -1,4 +1,14 @@
 {
+  "name": "inventiq-next-gen",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node start.js",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && python main.py",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "build": "cd frontend && npm run build"
+  },
   "devDependencies": {
     "@tailwindcss/postcss7-compat": "^2.2.17",
     "autoprefixer": "^10.4.21",
@@ -11,5 +21,9 @@
     "@mui/icons-material": "^7.0.1",
     "@mui/material": "^7.0.1",
     "axios": "^1.8.4"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
   }
 }

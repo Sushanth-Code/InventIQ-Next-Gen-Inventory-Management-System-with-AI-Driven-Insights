@@ -250,42 +250,78 @@ const SmartAssistant: React.FC = () => {
     if (!speechRecognition) return;
     
     if (listening) {
-      speechRecognition.stop();
+      // Stop listening
+      try {
+        speechRecognition.stop();
+      } catch (err) {
+        console.error('Error stopping speech recognition:', err);
+      }
       setListening(false);
     } else {
-      speechRecognition.start();
-      setListening(true);
+      // Cancel any ongoing speech before starting to listen
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      
+      // Clear any previous query
+      setQuery('');
+      
+      // Start listening
+      try {
+        speechRecognition.start();
+        setListening(true);
+      } catch (err) {
+        console.error('Error starting speech recognition:', err);
+        setListening(false);
+      }
     }
   };
   
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any ongoing speech and recognition when component unmounts
+      window.speechSynthesis.cancel();
+      if (speechRecognition) {
+        speechRecognition.stop();
+      }
+    };
+  }, [speechRecognition]);
+  
   // Speech synthesis function
   const speakText = (text: string) => {
-    if (!speechEnabled || !text) return;
+    if (!speechEnabled) return;
     
-    // Cancel any ongoing speech
+    // Cancel any ongoing speech before starting new one
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Find Heera voice
-    const heeraVoice = availableVoices.find(voice => voice.name.includes('Heera'));
-    if (heeraVoice) {
-      utterance.voice = heeraVoice;
-    } else if (availableVoices.length > 0 && voiceIndex >= 0) {
+    // Set voice if available
+    if (availableVoices.length > 0 && voiceIndex < availableVoices.length) {
       utterance.voice = availableVoices[voiceIndex];
     }
     
-    utterance.rate = 1.0; // Normal speed
-    utterance.pitch = 1.0; // Normal pitch
-    utterance.volume = 1.0; // Full volume
+    // Set rate and pitch for more natural speech
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
     
-    // Handle speech events
+    // Set up event handlers
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setSpeaking(false);
+    };
     
-    // Start speaking
+    // Store the current utterance for potential cancellation
     window.speechSynthesis.speak(utterance);
+    
+    // Return a cleanup function to cancel this speech if needed
+    return () => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
   };
   
   // Toggle speech synthesis

@@ -1,7 +1,16 @@
 import json
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout
+from prophet import Prophet
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def prepare_time_series(product):
     """Convert historical sales to time series data."""
@@ -73,13 +82,157 @@ def simple_forecast(product, days=30):
     
     return forecast
 
-def forecast_demand(product, days=30):
-    """Forecast demand using simple moving average."""
-    return simple_forecast(product, days)
+def create_lstm_model(input_shape):
+    """Create and return an LSTM model."""
+    model = Sequential([
+        LSTM(50, return_sequences=True, input_shape=input_shape),
+        Dropout(0.2),
+        LSTM(50, return_sequences=False),
+        Dropout(0.2),
+        Dense(25),
+        Dense(1)
+    ])
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    return model
+
+def prepare_lstm_data(data, n_steps=30):
+    """Prepare data for LSTM model."""
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data.reshape(-1, 1))
+    
+    X, y = [], []
+    for i in range(n_steps, len(scaled_data)):
+        X.append(scaled_data[i-n_steps:i, 0])
+        y.append(scaled_data[i, 0])
+    
+    X, y = np.array(X), np.array(y)
+    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    return X, y, scaler
+
+def forecast_with_lstm(product, days=30):
+    """Forecast demand using LSTM model."""
+    try:
+        df = prepare_time_series(product)
+        if len(df) < 60:  # Need sufficient data for LSTM
+            logger.warning(f"Insufficient data for LSTM model for product {product.id}. Using simple forecast.")
+            return simple_forecast(product, days)
+        
+        # Prepare data
+        data = df['quantity'].values
+        n_steps = 30
+        X, y, scaler = prepare_lstm_data(data, n_steps)
+        
+        # Split data
+        train_size = int(len(X) * 0.8)
+        X_train, X_test = X[:train_size], X[train_size:]
+        y_train, y_test = y[:train_size], y[train_size:]
+        
+        # Create and train model
+        model = create_lstm_model((X_train.shape[1], 1))
+        model.fit(X_train, y_train, epochs=50, batch_size=32, verbose=0)
+        
+        # Make predictions
+        forecast = []
+        last_sequence = X_test[-1] if len(X_test) > 0 else X_train[-1]
+        
+        for _ in range(days):
+            # Predict next value
+            next_pred = model.predict(last_sequence.reshape(1, n_steps, 1), verbose=0)[0][0]
+            forecast.append(next_pred)
+            
+            # Update sequence with prediction
+            last_sequence = np.append(last_sequence[1:], next_pred)
+        
+        # Inverse transform predictions
+        forecast = np.array(forecast).reshape(-1, 1)
+        forecast = scaler.inverse_transform(forecast).flatten()
+        
+        return [max(0, round(x)) for x in forecast]
+    
+    except Exception as e:
+        logger.error(f"Error in LSTM forecast for product {getattr(product, 'id', 'unknown')}: {str(e)}")
+        return simple_forecast(product, days)
+
+def forecast_with_prophet(product, days=30):
+    """Forecast demand using Facebook Prophet."""
+    try:
+        df = prepare_time_series(product)
+        if len(df) < 30:  # Need sufficient data for Prophet
+            logger.warning(f"Insufficient data for Prophet model for product {product.id}. Using simple forecast.")
+            return simple_forecast(product, days)
+        
+        # Prepare data for Prophet
+        prophet_df = pd.DataFrame({
+            'ds': pd.to_datetime(df['day'].str.replace('Day-', ''), format='%d-%m-%Y', errors='coerce'),
+            'y': df['quantity']
+        }).dropna()
+        
+        if len(prophet_df) < 14:  # Minimum data points needed
+            return simple_forecast(product, days)
+        
+        # Create and fit model
+        model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=True,
+            daily_seasonality=False,
+            seasonality_mode='multiplicative'
+        )
+        model.fit(prophet_df)
+        
+        # Create future dates
+        future_dates = model.make_future_dataframe(periods=days)
+        
+        # Make predictions
+        forecast = model.predict(future_dates)
+        
+        # Get the forecasted values
+        forecast_values = forecast['yhat'][-days:].values
+        
+        return [max(0, round(x)) for x in forecast_values]
+    
+    except Exception as e:
+        logger.error(f"Error in Prophet forecast for product {getattr(product, 'id', 'unknown')}: {str(e)}")
+        return simple_forecast(product, days)
+
+def forecast_demand(product, days=30, method='prophet'):
+    """
+    Forecast demand using the specified method.
+    
+    Args:
+        product: Product object with historical sales data
+        days: Number of days to forecast
+        method: 'prophet' (default), 'lstm', or 'simple'
+    
+    Returns:
+        List of forecasted demand values
+    """
+    try:
+        if method.lower() == 'prophet':
+            return forecast_with_prophet(product, days)
+        elif method.lower() == 'lstm':
+            return forecast_with_lstm(product, days)
+        else:
+            return simple_forecast(product, days)
+    except Exception as e:
+        logger.error(f"Error in forecast_demand: {str(e)}")
+        return simple_forecast(product, days)
 
 def recommend_restock(product, is_trending=False):
-    """Recommend restock quantity based on forecast and current stock."""
-    forecast = forecast_demand(product, days=7)  # Forecast next 7 days
+    """
+    Recommend restock quantity based on forecast and current stock.
+    
+    Uses Prophet for forecasting by default, falls back to simple forecast if needed.
+    """
+    try:
+        # First try Prophet, fall back to LSTM if it fails, then to simple forecast
+        forecast = forecast_demand(product, days=14, method='prophet')  # Forecast next 14 days for better accuracy
+    except Exception as e:
+        logger.warning(f"Prophet forecast failed, falling back to LSTM: {str(e)}")
+        try:
+            forecast = forecast_demand(product, days=14, method='lstm')
+        except Exception as e:
+            logger.warning(f"LSTM forecast failed, falling back to simple forecast: {str(e)}")
+            forecast = forecast_demand(product, days=14, method='simple')
     avg_daily_demand = sum(forecast) / len(forecast)
     
     # Calculate safety stock (2 weeks worth)

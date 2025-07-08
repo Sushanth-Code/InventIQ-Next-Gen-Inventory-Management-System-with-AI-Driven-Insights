@@ -21,6 +21,7 @@ const AddProductPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
 
   // Fetch existing categories on component mount
   useEffect(() => {
@@ -167,36 +168,54 @@ const AddProductPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required>
-                <InputLabel id="category-label">Category</InputLabel>
-                <Select
-                  labelId="category-label"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  label="Category"
-                >
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
+              {!showCustomCategory ? (
+                <FormControl fullWidth required>
+                  <InputLabel id="category-label">Category</InputLabel>
+                  <Select
+                    labelId="category-label"
+                    name="category"
+                    value={formData.category}
+                    onChange={(e) => {
+                      if (e.target.value === 'other') {
+                        setShowCustomCategory(true);
+                        setFormData(prev => ({ ...prev, category: '' }));
+                      } else {
+                        setFormData(prev => ({ ...prev, category: e.target.value }));
+                      }
+                    }}
+                    label="Category"
+                  >
+                    {categories.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                    <MenuItem value="other">
+                      <em>Other (Add New)</em>
                     </MenuItem>
-                  ))}
-                  <MenuItem value="other">
-                    <em>Other (Add New)</em>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-              {formData.category === 'other' && (
-                <TextField
-                  fullWidth
-                  label="New Category"
-                  name="category"
-                  value={formData.category === 'other' ? '' : formData.category}
-                  onChange={handleChange}
-                  required
-                  variant="outlined"
-                  sx={{ mt: 2 }}
-                />
+                  </Select>
+                </FormControl>
+              ) : (
+                <Box sx={{ width: '100%' }}>
+                  <FormControl fullWidth required>
+                    <TextField
+                      fullWidth
+                      label="New Category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      onBlur={() => {
+                        if (!formData.category) {
+                          setShowCustomCategory(false);
+                        }
+                      }}
+                      required
+                      variant="outlined"
+                      autoFocus
+                      sx={{ mt: 0 }}
+                    />
+                  </FormControl>
+                </Box>
               )}
             </Grid>
 

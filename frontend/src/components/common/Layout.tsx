@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Sidebar */}
       <div className={`bg-[#4169e1] text-white ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex flex-col shadow-lg`}>
         <div className="p-4 flex items-center justify-between border-b border-blue-700">
-          <h1 className={`font-bold text-xl ${isSidebarOpen ? 'block' : 'hidden'}`}>Smart Inventory System</h1>
+          <h1 className={`font-bold text-xl ${isSidebarOpen ? 'block' : 'hidden'}`}>INVENTIQ</h1>
           <button onClick={toggleSidebar} className="text-white focus:outline-none">
             <span className="material-icons">{isSidebarOpen ? 'menu_open' : 'menu'}</span>
           </button>

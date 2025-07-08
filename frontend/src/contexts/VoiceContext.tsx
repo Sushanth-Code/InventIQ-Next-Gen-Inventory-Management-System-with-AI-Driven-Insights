@@ -28,8 +28,34 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   } = useSpeechRecognition();
 
   const speak = useCallback((text: string) => {
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set up event handlers to track speech state
+    utterance.onend = () => {
+      console.log('Speech finished');
+    };
+    
+    utterance.onerror = (event) => {
+      console.error('Speech error:', event);
+    };
+    
     window.speechSynthesis.speak(utterance);
+    
+    // Return a function to cancel the speech
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any ongoing speech when component unmounts
+      window.speechSynthesis.cancel();
+    };
   }, []);
 
   const processQuery = async (query: string) => {
@@ -58,6 +84,9 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [browserSupportsSpeechRecognition, isMicrophoneAvailable, resetTranscript]);
 
   const stopListening = useCallback(() => {
+    // Cancel any ongoing speech when stopping listening
+    window.speechSynthesis.cancel();
+    
     SpeechRecognition.stopListening();
     if (transcript) {
       processQuery(transcript);
