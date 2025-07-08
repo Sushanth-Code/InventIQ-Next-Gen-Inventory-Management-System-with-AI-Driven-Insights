@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'h7G@p$!wR*zK#uJyX^mN&sVbF+cEqA2d'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql://root:Sql%402025@localhost/inventiq_next_gen'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your secret key'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'root user and databse name'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # AI/LLM Configuration
