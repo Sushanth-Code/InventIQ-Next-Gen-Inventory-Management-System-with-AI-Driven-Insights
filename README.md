@@ -32,7 +32,7 @@
 |----------|--------------|
 | **Frontend** | ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Material UI](https://img.shields.io/badge/Material_UI-0081CB?style=for-the-badge&logo=material-ui&logoColor=white) ![Redux](https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white) |
 | **Backend** | ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white) |
-| **AI/ML** | ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white) ![Ollama's API](https://img.shields.io/badge/Gemini_API-4285F4?style=for-the-badge&logo=google&logoColor=white) |
+| **AI/ML** | ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-FF6F00?style=for-the-badge&logo=ollama&logoColor=white) |
 | **Data Storage** | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) ![CSV](https://img.shields.io/badge/CSV-217346?style=for-the-badge&logo=microsoft-excel&logoColor=white) |
 | **DevOps** | ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) |
 
@@ -45,6 +45,7 @@
 - Node.js (v16+)
 - Python (v3.9+)
 - npm or yarn
+- Ollama (for AI features)
 
 ### Installation
 
@@ -66,24 +67,32 @@
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables**
+4. **Set up Ollama**
+   - Download and install Ollama from [ollama.ai](https://ollama.ai/)
+   - Start the Ollama server
+   - Download the required model:
+     ```bash
+     ollama pull llama2
+     ```
+
+5. **Configure environment variables**
    ```bash
    cp .env.example .env
    # Edit .env file with your configuration
    ```
 
-5. **Start the backend server**
+6. **Start the backend server**
    ```bash
    python app.py
    ```
 
-6. **Start the frontend development server**
+7. **Start the frontend development server**
    ```bash
    cd ../frontend
    npm start
    ```
 
-7. **Open your browser**
+8. **Open your browser**
    Navigate to `http://localhost:3000` to see the application in action!
 
 ## 🔑 Demo Credentials
@@ -93,7 +102,7 @@
 | **Admin** | `admin` | `admin123` |
 | **Staff** | `staff` | `staff123` |
 
-## 📱 Screenshots
+## 📸 Screenshots
 
 <div align="center">
 
@@ -105,26 +114,26 @@
 
 ## 🌟 Key Features Showcase
 
-- **Smart Inventory Assistant**: Leverages Gemini API to provide intelligent inventory insights and answer complex queries in natural language
+- **Smart Inventory Assistant**: Leverages Ollama's powerful language models to provide intelligent inventory insights and answer complex queries in natural language
 - **Predictive Restocking**: ML algorithms analyze historical data to predict optimal reorder times and quantities
 - **Real-time Notifications**: Stay informed about critical inventory events with customizable alerts
 - **Comprehensive Analytics**: Make data-driven decisions with detailed reports and visualizations
 
 ## 👨‍💻 Creator
 
-This project was developed by a talented team of AIML expert:
+This project was developed by a talented team of AIML experts:
 
 <div align="center">
 
 | <img src="https://github.com/identicons/sushanth.png" width="100" height="100" alt="Sushanth"> | 
 |----------|
-| **Sushanth P H** 
-| Full Stack Developer| 
+| **Sushanth P H** |
+| Full Stack Developer |
 
 </div>
 
 <div align="center">
 
-Made by Team InventIQ
+Made with ❤️ by Team InventIQ
 
 </div>
