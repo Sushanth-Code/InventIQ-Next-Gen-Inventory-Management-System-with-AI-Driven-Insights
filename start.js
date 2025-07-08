@@ -61,9 +61,25 @@ setTimeout(() => {
     if (str.includes('Compiled successfully')) {
       console.log('[✓] Frontend compiled successfully');
     }
-    if (str.includes('Local:')) {
-      console.log('    ' + str.split('Local:')[1].split('\n')[0].trim());
-      console.log('    ' + str.split('On Your Network:')[1].split('\n')[0].trim() + '\n');
+    
+    // More robust URL parsing
+    try {
+      if (str.includes('Local:')) {
+        const localLine = str.split('Local:')[1]?.split('\n')[0]?.trim() || '';
+        if (localLine) console.log(`    Local: ${localLine}`);
+        
+        const networkMatch = str.match(/On Your Network:(.*?)(\n|$)/);
+        if (networkMatch && networkMatch[1]) {
+          console.log(`    On Your Network: ${networkMatch[1].trim()}\n`);
+        }
+      }
+    } catch (err) {
+      // Silently handle any parsing errors
+    }
+    
+    // Show any other relevant output
+    if (!str.includes('Compiled successfully') && !str.includes('Local:')) {
+      console.log('    ' + str.trim());
     }
   });
 
